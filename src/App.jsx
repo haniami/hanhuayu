@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const hsk1Cards = [
   { char: "爱", pinyin: "ài", meaning: "love; to love" },
@@ -522,7 +522,7 @@ function lsSet(key, value) {
 
 // ── ROOT ─────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreen] = useState("flashSelect");
+  const [screen, setScreenState] = useState("flashSelect");
   const [activeSet, setActiveSet] = useState(null);
   const [randomCards, setRandomCards] = useState(null);
   const [randomMode, setRandomMode] = useState(null);
@@ -530,10 +530,28 @@ export default function App() {
   const [quizCards, setQuizCards] = useState(null);
   const [quizQuestions, setQuizQuestions] = useState(null);
 
-  // Persisted state — loaded from localStorage on mount
   const [setScores, setSetScores] = useState(() => lsGet(LS_QUIZ_SCORES, Array(16).fill(null)));
   const [flashProgress, setFlashProgress] = useState(() => lsGet(LS_FLASH_PROGRESS, {}));
   const [flashDone, setFlashDone] = useState(() => lsGet(LS_FLASH_DONE, {}));
+
+  // Push a new history entry whenever screen changes
+  const setScreen = (newScreen) => {
+    window.history.pushState({ screen: newScreen }, "", "");
+    setScreenState(newScreen);
+  };
+
+  // Handle phone/browser back button
+  useEffect(() => {
+    const onPop = () => {
+      const s = window.history.state?.screen;
+      if (s) setScreenState(s);
+      else setScreenState("flashSelect");
+    };
+    window.addEventListener("popstate", onPop);
+    // Set initial history entry so first back press doesn't leave the app
+    window.history.replaceState({ screen: "flashSelect" }, "", "");
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   const markFlashProgress = (setIdx, cardIndex, total) => {
     if (setIdx === RANDOM_SET_IDX) return;
