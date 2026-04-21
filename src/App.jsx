@@ -712,492 +712,419 @@ function lsGet(key, fallback) { try { const v = localStorage.getItem(key); retur
 function lsSet(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} }
 
 // ── THEME ──────────────────────────────────────────────────────────────────
-const GOLD = "#f5c842"; const ORANGE = "#ff8c42"; const TEAL = "#2dd4bf";
-const BG = { minHeight: "100vh", width: "100%", boxSizing: "border-box", background: "linear-gradient(135deg,#0f0c29,#302b63,#24243e)", display: "flex", flexDirection: "column", alignItems: "center", fontFamily: "'Noto Serif',Georgia,serif", padding: "28px 20px 40px", position: "relative", overflowX: "hidden", overflowY: "auto" };
-const BLOB1 = { position: "absolute", width: 300, height: 300, borderRadius: "50%", background: "rgba(255,180,50,0.07)", top: -80, right: -80, filter: "blur(60px)", pointerEvents: "none" };
-const BLOB2 = { position: "absolute", width: 250, height: 250, borderRadius: "50%", background: "rgba(100,150,255,0.09)", bottom: -60, left: -60, filter: "blur(50px)", pointerEvents: "none" };
 
-// ── 3-TAB TOGGLE ──────────────────────────────────────────────────────────
-function TabBar({ current, onFlash, onConv, onQuiz }) {
-  const tabs = [{ id: "flash", label: "FLASHCARDS", fn: onFlash }, { id: "conv", label: "CONVERSATIONS", fn: onConv }, { id: "quiz", label: "QUIZ", fn: onQuiz }];
+// ── SHARED STYLES & HELPERS ───────────────────────────────────────────────
+const GOLD = "#f5c842"; const ORANGE = "#ff8c42"; const TEAL = "#2dd4bf";
+const BG = { minHeight:"100vh", width:"100%", boxSizing:"border-box", background:"linear-gradient(135deg,#0f0c29,#302b63,#24243e)", display:"flex", flexDirection:"column", alignItems:"center", fontFamily:"'Noto Serif',Georgia,serif", padding:"16px 16px 60px", position:"relative", overflowX:"hidden", overflowY:"auto" };
+const BLOB1 = { position:"fixed", width:260, height:260, borderRadius:"50%", background:"rgba(255,180,50,0.06)", top:-60, right:-60, filter:"blur(50px)", pointerEvents:"none", zIndex:0 };
+const BLOB2 = { position:"fixed", width:220, height:220, borderRadius:"50%", background:"rgba(100,150,255,0.08)", bottom:-50, left:-50, filter:"blur(40px)", pointerEvents:"none", zIndex:0 };
+const MAX = 480;
+
+function BackBtn({ onClick, label }) {
   return (
-    <div style={{ display: "flex", gap: 6, marginBottom: 20, zIndex: 1, flexWrap: "wrap", justifyContent: "center" }}>
+    <button onClick={onClick} style={{ display:"flex", alignItems:"center", gap:5, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.14)", borderRadius:99, padding:"8px 16px", color:"rgba(255,255,255,0.75)", fontSize:13, fontWeight:700, cursor:"pointer", flexShrink:0 }}>
+      ← {label || "Back"}
+    </button>
+  );
+}
+
+function TabBar({ current, onFlash, onConv, onQuiz }) {
+  const tabs = [{ id:"flash", label:"CARDS", fn:onFlash }, { id:"conv", label:"CONVO", fn:onConv }, { id:"quiz", label:"QUIZ", fn:onQuiz }];
+  return (
+    <div style={{ display:"flex", gap:6, marginBottom:14, zIndex:1, width:"100%", maxWidth:MAX, justifyContent:"center" }}>
       {tabs.map(t => (
-        <button key={t.id} onClick={t.fn} style={{ padding: "7px 14px", borderRadius: 99, background: current === t.id ? `linear-gradient(135deg,${GOLD},${ORANGE})` : "rgba(255,255,255,0.06)", border: current === t.id ? "none" : "1px solid rgba(255,255,255,0.15)", color: current === t.id ? "#1a1500" : "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700, letterSpacing: 1, cursor: "pointer" }}>{t.label}</button>
+        <button key={t.id} onClick={t.fn} style={{ flex:1, padding:"9px 4px", borderRadius:99, background:current===t.id?`linear-gradient(135deg,${GOLD},${ORANGE})`:"rgba(255,255,255,0.07)", border:current===t.id?"none":"1px solid rgba(255,255,255,0.14)", color:current===t.id?"#1a1500":"rgba(255,255,255,0.6)", fontSize:11, fontWeight:700, letterSpacing:1, cursor:"pointer" }}>{t.label}</button>
       ))}
     </div>
   );
 }
 
-// ── FLASHCARD SET SELECTOR ─────────────────────────────────────────────────
+function ProgressRow({ label, current, total, accent }) {
+  const ac = accent || GOLD;
+  return (
+    <div style={{ width:"100%", zIndex:1 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
+        <span style={{ color:ac, fontSize:12, fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:"70%" }}>{label}</span>
+        <span style={{ color:"rgba(255,255,255,0.42)", fontSize:12, flexShrink:0 }}>{current}/{total}</span>
+      </div>
+      <div style={{ background:"rgba(255,255,255,0.08)", borderRadius:99, height:5, overflow:"hidden" }}>
+        <div style={{ width:`${(current/total)*100}%`, height:"100%", background:`linear-gradient(90deg,${ac},${ac===TEAL?"#60a5fa":ORANGE})`, borderRadius:99, transition:"width 0.4s" }} />
+      </div>
+    </div>
+  );
+}
+
 function FlashSetSelector({ onSelect, onGoConv, onGoQuiz, flashProgress, flashDone }) {
   return (
     <div style={BG}>
-      <div style={BLOB1} /><div style={BLOB2} />
-      <div style={{ textAlign: "center", marginBottom: 16, zIndex: 1 }}>
-        <h1 style={{ color: GOLD, fontSize: 24, fontWeight: 700, letterSpacing: 2, margin: 0 }}>HSK 1 · 汉字</h1>
-        <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, marginTop: 4 }}>16 sets · 10 cards each</p>
+      <div style={BLOB1}/><div style={BLOB2}/>
+      <div style={{ textAlign:"center", marginBottom:12, zIndex:1 }}>
+        <h1 style={{ color:GOLD, fontSize:22, fontWeight:700, letterSpacing:2, margin:0 }}>HSK 1 · 汉字</h1>
+        <p style={{ color:"rgba(255,255,255,0.38)", fontSize:12, marginTop:4 }}>16 sets · 10 cards each</p>
       </div>
-      <TabBar current="flash" onFlash={() => {}} onConv={onGoConv} onQuiz={onGoQuiz} />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, width: "100%", maxWidth: 440, zIndex: 1 }}>
-        {QUIZ_SETS.map((set, i) => {
-          const done = flashDone[i]; const prog = flashProgress[i]; const inProg = !done && prog > 0;
+      <TabBar current="flash" onFlash={()=>{}} onConv={onGoConv} onQuiz={onGoQuiz}/>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, width:"100%", maxWidth:MAX, zIndex:1 }}>
+        {QUIZ_SETS.map((set,i) => {
+          const done=flashDone[i]; const prog=flashProgress[i]; const inProg=!done&&prog>0;
           return (
-            <button key={i} onClick={() => onSelect(i)} style={{ borderRadius: 14, padding: "14px 6px", background: done ? "rgba(74,222,128,0.1)" : inProg ? "rgba(245,200,66,0.08)" : "rgba(255,255,255,0.05)", border: `1px solid ${done ? "rgba(74,222,128,0.4)" : inProg ? "rgba(245,200,66,0.3)" : "rgba(255,255,255,0.11)"}`, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, position: "relative" }}
-              onMouseEnter={e => e.currentTarget.style.opacity = "0.8"} onMouseLeave={e => e.currentTarget.style.opacity = "1"}>
-              <span style={{ fontSize: 13, fontWeight: 700, color: done ? "#4ade80" : inProg ? GOLD : "rgba(255,255,255,0.8)" }}>Set {i + 1}</span>
-              <span style={{ fontSize: 18, color: done ? "rgba(74,222,128,0.6)" : "rgba(255,255,255,0.35)" }}>{set[0].char}</span>
-              {done && <span style={{ fontSize: 9, color: "#4ade80", fontWeight: 700 }}>✓ Done</span>}
-              {inProg && <span style={{ fontSize: 9, color: GOLD }}>{prog + 1}/10</span>}
+            <button key={i} onClick={()=>onSelect(i)} style={{ borderRadius:14, padding:"12px 4px", background:done?"rgba(74,222,128,0.1)":inProg?"rgba(245,200,66,0.08)":"rgba(255,255,255,0.05)", border:`1px solid ${done?"rgba(74,222,128,0.4)":inProg?"rgba(245,200,66,0.3)":"rgba(255,255,255,0.11)"}`, color:"#fff", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
+              <span style={{ fontSize:12, fontWeight:700, color:done?"#4ade80":inProg?GOLD:"rgba(255,255,255,0.8)" }}>Set {i+1}</span>
+              <span style={{ fontSize:17, color:done?"rgba(74,222,128,0.6)":"rgba(255,255,255,0.35)" }}>{set[0].char}</span>
+              {done&&<span style={{ fontSize:8, color:"#4ade80", fontWeight:700 }}>✓ Done</span>}
+              {inProg&&<span style={{ fontSize:8, color:GOLD }}>{prog+1}/10</span>}
             </button>
           );
         })}
-        <button onClick={() => onSelect(RANDOM_SET_IDX)} style={{ borderRadius: 14, padding: "14px 6px", background: "linear-gradient(135deg,rgba(100,150,255,0.15),rgba(180,100,255,0.15))", border: "1px solid rgba(150,130,255,0.4)", color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd" }}>Random</span>
-          <span style={{ fontSize: 20 }}>🎲</span>
+        <button onClick={()=>onSelect(RANDOM_SET_IDX)} style={{ borderRadius:14, padding:"12px 4px", background:"linear-gradient(135deg,rgba(100,150,255,0.15),rgba(180,100,255,0.15))", border:"1px solid rgba(150,130,255,0.4)", color:"#fff", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
+          <span style={{ fontSize:12, fontWeight:700, color:"#c4b5fd" }}>Random</span>
+          <span style={{ fontSize:20 }}>🎲</span>
         </button>
       </div>
-      <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 11, marginTop: 20, zIndex: 1 }}>{Object.keys(flashDone).length}/16 sets completed</p>
+      <p style={{ color:"rgba(255,255,255,0.18)", fontSize:11, marginTop:14, zIndex:1 }}>{Object.keys(flashDone).length}/16 completed</p>
     </div>
   );
 }
 
-// ── FLASHCARD MODE ─────────────────────────────────────────────────────────
 function FlashcardMode({ setIdx, customCards, initialIndex, onProgress, onBack, onGoConv, onGoQuiz }) {
-  const [cards] = useState(() => customCards || (setIdx === RANDOM_SET_IDX ? getRandomSet() : QUIZ_SETS[setIdx]));
-  const [index, setIndex] = useState(initialIndex || 0);
+  const [cards] = useState(()=>customCards||(setIdx===RANDOM_SET_IDX?getRandomSet():QUIZ_SETS[setIdx]));
+  const [index, setIndex] = useState(initialIndex||0);
   const [flipped, setFlipped] = useState(false);
   const [dir, setDir] = useState(null);
-  const total = cards.length; const card = cards[index];
-  const go = (d) => {
-    setDir(d); setFlipped(false);
-    setTimeout(() => { setIndex(p => { const next = d === "next" ? (p + 1) % total : (p - 1 + total) % total; onProgress && onProgress(setIdx, next, total); return next; }); setDir(null); }, 200);
-  };
+  const total=cards.length; const card=cards[index];
+  const go=(d)=>{ setDir(d); setFlipped(false); setTimeout(()=>{ setIndex(p=>{ const next=d==="next"?(p+1)%total:(p-1+total)%total; onProgress&&onProgress(setIdx,next,total); return next; }); setDir(null); },200); };
+  const label = setIdx===RANDOM_SET_IDX?"🎲 Random":`Set ${setIdx+1}`;
   return (
     <div style={BG}>
-      <div style={BLOB1} /><div style={BLOB2} />
-      <div style={{ display: "flex", alignItems: "center", width: "100%", maxWidth: 440, marginBottom: 14, zIndex: 1, gap: 12 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-            <span style={{ color: GOLD, fontSize: 13, fontWeight: 700 }}>{setIdx === RANDOM_SET_IDX ? "🎲 Random" : `Set ${setIdx + 1}`}</span>
-            <span style={{ color: "rgba(255,255,255,0.42)", fontSize: 12 }}>{index + 1} / {total}</span>
+      <div style={BLOB1}/><div style={BLOB2}/>
+      <div style={{ display:"flex", alignItems:"center", width:"100%", maxWidth:MAX, marginBottom:12, zIndex:1, gap:10 }}>
+        <BackBtn onClick={onBack} label="Sets"/>
+        <div style={{ flex:1 }}><ProgressRow label={label} current={index+1} total={total} accent={GOLD}/></div>
+      </div>
+      <TabBar current="flash" onFlash={onBack} onConv={onGoConv} onQuiz={onGoQuiz}/>
+      <p style={{ color:"rgba(255,255,255,0.38)", fontSize:12, marginBottom:10, zIndex:1 }}>Tap card to reveal</p>
+      <div onClick={()=>setFlipped(f=>!f)} style={{ width:"100%", maxWidth:MAX, height:200, perspective:"1000px", cursor:"pointer", marginBottom:22, zIndex:1, opacity:dir?0:1, transform:dir==="next"?"translateX(-22px)":dir==="prev"?"translateX(22px)":"none", transition:"opacity 0.2s,transform 0.2s" }}>
+        <div style={{ position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d", transition:"transform 0.55s cubic-bezier(.4,.2,.2,1)", transform:flipped?"rotateY(180deg)":"rotateY(0)" }}>
+          <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:"linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))", border:"1px solid rgba(245,200,66,0.25)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, boxShadow:"0 8px 40px rgba(0,0,0,0.4)" }}>
+            <span style={{ fontSize:72, lineHeight:1, color:"#fff", textShadow:"0 4px 24px rgba(245,200,66,0.3)" }}>{card.char}</span>
+            <span style={{ fontSize:15, color:GOLD, letterSpacing:3, fontStyle:"italic" }}>{card.pinyin}</span>
           </div>
-          <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5, overflow: "hidden" }}>
-            <div style={{ width: `${((index + 1) / total) * 100}%`, height: "100%", background: `linear-gradient(90deg,${GOLD},${ORANGE})`, borderRadius: 99, transition: "width 0.4s" }} />
+          <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", transform:"rotateY(180deg)", background:"linear-gradient(145deg,rgba(245,200,66,0.12),rgba(245,200,66,0.03))", border:"1px solid rgba(245,200,66,0.5)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10, padding:20 }}>
+            <span style={{ fontSize:28, color:"rgba(255,255,255,0.18)" }}>{card.char}</span>
+            <span style={{ fontSize:20, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.4 }}>{card.meaning}</span>
+            <span style={{ fontSize:13, color:GOLD, letterSpacing:3, fontStyle:"italic" }}>{card.pinyin}</span>
           </div>
         </div>
       </div>
-      <TabBar current="flash" onFlash={onBack} onConv={onGoConv} onQuiz={onGoQuiz} />
-      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, marginBottom: 14, zIndex: 1 }}>Tap card to reveal meaning</p>
-      <div onClick={() => setFlipped(f => !f)} style={{ width: "100%", maxWidth: 440, height: 220, perspective: "1000px", cursor: "pointer", marginBottom: 28, zIndex: 1, opacity: dir ? 0 : 1, transform: dir === "next" ? "translateX(-28px)" : dir === "prev" ? "translateX(28px)" : "none", transition: "opacity 0.2s, transform 0.2s" }}>
-        <div style={{ position: "relative", width: "100%", height: "100%", transformStyle: "preserve-3d", transition: "transform 0.55s cubic-bezier(.4,.2,.2,1)", transform: flipped ? "rotateY(180deg)" : "rotateY(0)" }}>
-          <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", background: "linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))", border: "1px solid rgba(245,200,66,0.25)", borderRadius: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, boxShadow: "0 8px 48px rgba(0,0,0,0.4)" }}>
-            <span style={{ fontSize: 76, lineHeight: 1, color: "#fff", textShadow: "0 4px 24px rgba(245,200,66,0.3)" }}>{card.char}</span>
-            <span style={{ fontSize: 16, color: GOLD, letterSpacing: 3, fontStyle: "italic" }}>{card.pinyin}</span>
-          </div>
-          <div style={{ position: "absolute", inset: 0, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "linear-gradient(145deg,rgba(245,200,66,0.12),rgba(245,200,66,0.04))", border: "1px solid rgba(245,200,66,0.5)", borderRadius: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 24 }}>
-            <span style={{ fontSize: 32, color: "rgba(255,255,255,0.2)" }}>{card.char}</span>
-            <span style={{ fontSize: 20, color: "#fff", fontWeight: 600, textAlign: "center", lineHeight: 1.4 }}>{card.meaning}</span>
-            <span style={{ fontSize: 14, color: GOLD, letterSpacing: 3, fontStyle: "italic" }}>{card.pinyin}</span>
-          </div>
-        </div>
-      </div>
-      <div style={{ display: "flex", gap: 18, alignItems: "center", zIndex: 1 }}>
-        <button onClick={() => go("prev")} style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>←</button>
-        <button onClick={() => setFlipped(f => !f)} style={{ padding: "11px 26px", borderRadius: 99, background: `linear-gradient(135deg,${GOLD},${ORANGE})`, border: "none", color: "#1a1500", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{flipped ? "HIDE" : "REVEAL"}</button>
-        <button onClick={() => go("next")} style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>→</button>
+      <div style={{ display:"flex", gap:12, alignItems:"center", zIndex:1, width:"100%", maxWidth:MAX, justifyContent:"center" }}>
+        <button onClick={()=>go("prev")} style={{ width:48, height:48, borderRadius:"50%", background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:18, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>←</button>
+        <button onClick={()=>setFlipped(f=>!f)} style={{ flex:1, maxWidth:180, padding:"12px 0", borderRadius:99, background:`linear-gradient(135deg,${GOLD},${ORANGE})`, border:"none", color:"#1a1500", fontSize:13, fontWeight:700, cursor:"pointer" }}>{flipped?"HIDE":"REVEAL"}</button>
+        <button onClick={()=>go("next")} style={{ width:48, height:48, borderRadius:"50%", background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:18, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>→</button>
       </div>
     </div>
   );
 }
 
-// ── CONVERSATION TOPIC SELECTOR ────────────────────────────────────────────
 function ConvSelector({ onSelect, onGoFlash, onGoQuiz, convProgress }) {
   const categories = [
-    { group: "Essentials", color: "#f5c842", topics: ["essentials","introductions","numbers","smalltalk"] },
-    { group: "Food & Drink", color: "#fb923c", topics: ["food","restaurant","coffeeshop","delivery","complaint","kopitiam","auntieuncle"] },
-    { group: "Shopping", color: "#a78bfa", topics: ["buystore","bargain","onlineshopping"] },
-    { group: "Movement", color: "#2dd4bf", topics: ["directions","grabtaxi","airport","hotel","transport"] },
-    { group: "Education", color: "#60a5fa", topics: ["school","groupwork","asklecturer"] },
-    { group: "Work", color: "#4ade80", topics: ["colleagues","meetings","followup"] },
-    { group: "Social", color: "#f472b6", topics: ["dating","makefriends","family"] },
-    { group: "Emergency", color: "#f87171", topics: ["clinic","police","emergency"] },
-    { group: "Malaysian 🇲🇾", color: "#fbbf24", topics: ["manglish","slang"] },
+    { group:"Essentials", color:"#f5c842", topics:["essentials","introductions","numbers","smalltalk"] },
+    { group:"Food & Drink", color:"#fb923c", topics:["food","restaurant","coffeeshop","delivery","complaint"] },
+    { group:"Shopping", color:"#a78bfa", topics:["buystore","bargain","onlineshopping"] },
+    { group:"Movement", color:"#2dd4bf", topics:["directions","grabtaxi","airport","hotel"] },
+    { group:"Education", color:"#60a5fa", topics:["school","groupwork","asklecturer"] },
+    { group:"Work", color:"#4ade80", topics:["colleagues","meetings","followup"] },
+    { group:"Social", color:"#f472b6", topics:["dating","makefriends","family"] },
+    { group:"Emergency", color:"#f87171", topics:["clinic","police","emergency"] },
+    { group:"Malaysian 🇲🇾", color:"#fbbf24", topics:["kopitiam","auntieuncle","transport","manglish","slang"] },
   ];
-  const topicMap = Object.fromEntries(CONV_TOPICS.map(t => [t.id, t]));
+  const topicMap = Object.fromEntries(CONV_TOPICS.map(t=>[t.id,t]));
   return (
     <div style={BG}>
-      <div style={BLOB1} /><div style={BLOB2} />
-      <div style={{ textAlign: "center", marginBottom: 16, zIndex: 1 }}>
-        <h1 style={{ color: TEAL, fontSize: 24, fontWeight: 700, letterSpacing: 2, margin: 0 }}>Conversation 会话</h1>
-        <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, marginTop: 4 }}>{CONV_TOPICS.length} topics · tap to study</p>
+      <div style={BLOB1}/><div style={BLOB2}/>
+      <div style={{ textAlign:"center", marginBottom:12, zIndex:1 }}>
+        <h1 style={{ color:TEAL, fontSize:22, fontWeight:700, letterSpacing:2, margin:0 }}>Conversations · 会话</h1>
+        <p style={{ color:"rgba(255,255,255,0.38)", fontSize:12, marginTop:4 }}>{CONV_TOPICS.length} topics</p>
       </div>
-      <TabBar current="conv" onFlash={onGoFlash} onConv={() => {}} onQuiz={onGoQuiz} />
-      <div style={{ width: "100%", maxWidth: 440, zIndex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
-        {categories.map(cat => (
-          <div key={cat.group}>
-            <p style={{ color: cat.color, fontSize: 11, fontWeight: 700, letterSpacing: 2, marginBottom: 8, textTransform: "uppercase" }}>{cat.group}</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 }}>
-              {cat.topics.map(tid => {
-                const topic = topicMap[tid]; if (!topic) return null;
-                const prog = convProgress[tid] || 0;
-                const done = prog >= topic.sentences.length;
-                return (
-                  <button key={tid} onClick={() => onSelect(tid)} style={{ borderRadius: 14, padding: "12px 10px", background: done ? `rgba(${cat.color === "#f5c842" ? "245,200,66" : cat.color === "#fb923c" ? "251,146,60" : cat.color === "#a78bfa" ? "167,139,250" : cat.color === "#2dd4bf" ? "45,212,191" : cat.color === "#60a5fa" ? "96,165,250" : cat.color === "#4ade80" ? "74,222,128" : cat.color === "#f472b6" ? "244,114,182" : cat.color === "#f87171" ? "248,113,113" : "251,191,36"},0.12)` : "rgba(255,255,255,0.05)", border: `1px solid ${done ? cat.color + "55" : "rgba(255,255,255,0.1)"}`, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, textAlign: "left" }}>
-                    <span style={{ fontSize: 22 }}>{topic.emoji}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: done ? cat.color : "rgba(255,255,255,0.85)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{topic.category}</div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>{topic.sentences.length} sentences{prog > 0 && !done ? ` · ${prog}/${topic.sentences.length}` : done ? " · ✓" : ""}</div>
-                    </div>
-                  </button>
-                );
-              })}
+      <TabBar current="conv" onFlash={onGoFlash} onConv={()=>{}} onQuiz={onGoQuiz}/>
+      <div style={{ width:"100%", maxWidth:MAX, zIndex:1, display:"flex", flexDirection:"column", gap:14 }}>
+        {categories.map(cat => {
+          const topics = cat.topics.map(id=>topicMap[id]).filter(Boolean);
+          return (
+            <div key={cat.group}>
+              <p style={{ color:cat.color, fontSize:10, fontWeight:700, letterSpacing:2, marginBottom:7, textTransform:"uppercase" }}>{cat.group}</p>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:7 }}>
+                {topics.map(topic => {
+                  const prog=convProgress[topic.id]||0; const done=prog>=topic.sentences.length;
+                  return (
+                    <button key={topic.id} onClick={()=>onSelect(topic.id)} style={{ borderRadius:13, padding:"11px 10px", background:done?"rgba(45,212,191,0.1)":"rgba(255,255,255,0.05)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:8, textAlign:"left" }}>
+                      <span style={{ fontSize:20, flexShrink:0 }}>{topic.emoji}</span>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.85)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{topic.category}</div>
+                        <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", marginTop:2 }}>{topic.sentences.length} sentences{done?" · ✓":prog>0?` · ${prog}/${topic.sentences.length}`:""}</div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// ── CONVERSATION FLASHCARD MODE ────────────────────────────────────────────
 function ConvFlashMode({ topicId, initialIndex, onProgress, onBack, onGoFlash, onGoQuiz }) {
-  const topic = CONV_TOPICS.find(t => t.id === topicId);
+  const topic = CONV_TOPICS.find(t=>t.id===topicId);
   const sentences = topic.sentences;
-  const [index, setIndex] = useState(initialIndex || 0);
+  const [index, setIndex] = useState(initialIndex||0);
   const [flipped, setFlipped] = useState(false);
   const [dir, setDir] = useState(null);
-  const total = sentences.length; const s = sentences[index];
-  const go = (d) => {
-    setDir(d); setFlipped(false);
-    setTimeout(() => { setIndex(p => { const next = d === "next" ? (p + 1) % total : (p - 1 + total) % total; onProgress && onProgress(topicId, next + 1); return next; }); setDir(null); }, 200);
-  };
+  const total=sentences.length; const s=sentences[index];
+  const go=(d)=>{ setDir(d); setFlipped(false); setTimeout(()=>{ setIndex(p=>{ const next=d==="next"?(p+1)%total:(p-1+total)%total; onProgress&&onProgress(topicId,next+1); return next; }); setDir(null); },200); };
   return (
     <div style={BG}>
-      <div style={BLOB1} /><div style={BLOB2} />
-      <div style={{ display: "flex", alignItems: "center", width: "100%", maxWidth: 440, marginBottom: 14, zIndex: 1, gap: 12 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-            <span style={{ color: TEAL, fontSize: 12, fontWeight: 700 }}>{topic.emoji} {topic.category}</span>
-            <span style={{ color: "rgba(255,255,255,0.42)", fontSize: 12 }}>{index + 1} / {total}</span>
+      <div style={BLOB1}/><div style={BLOB2}/>
+      <div style={{ display:"flex", alignItems:"center", width:"100%", maxWidth:MAX, marginBottom:12, zIndex:1, gap:10 }}>
+        <BackBtn onClick={onBack} label="Topics"/>
+        <div style={{ flex:1 }}><ProgressRow label={`${topic.emoji} ${topic.category}`} current={index+1} total={total} accent={TEAL}/></div>
+      </div>
+      <p style={{ color:"rgba(255,255,255,0.38)", fontSize:12, marginBottom:10, zIndex:1 }}>Tap card to reveal meaning</p>
+      <div onClick={()=>setFlipped(f=>!f)} style={{ width:"100%", maxWidth:MAX, minHeight:185, perspective:"1000px", cursor:"pointer", marginBottom:22, zIndex:1, opacity:dir?0:1, transition:"opacity 0.2s" }}>
+        <div style={{ position:"relative", width:"100%", minHeight:185, transformStyle:"preserve-3d", transition:"transform 0.55s cubic-bezier(.4,.2,.2,1)", transform:flipped?"rotateY(180deg)":"rotateY(0)" }}>
+          <div style={{ position:"absolute", inset:0, minHeight:185, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:"linear-gradient(145deg,rgba(45,212,191,0.1),rgba(45,212,191,0.03))", border:"1px solid rgba(45,212,191,0.25)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10, padding:22, boxShadow:"0 8px 40px rgba(0,0,0,0.4)" }}>
+            <span style={{ fontSize:22, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.6 }}>{s.zh}</span>
+            <span style={{ fontSize:13, color:TEAL, letterSpacing:1, fontStyle:"italic", textAlign:"center" }}>{s.pinyin}</span>
           </div>
-          <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5, overflow: "hidden" }}>
-            <div style={{ width: `${((index + 1) / total) * 100}%`, height: "100%", background: `linear-gradient(90deg,${TEAL},#60a5fa)`, borderRadius: 99, transition: "width 0.4s" }} />
+          <div style={{ position:"absolute", inset:0, minHeight:185, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", transform:"rotateY(180deg)", background:"linear-gradient(145deg,rgba(45,212,191,0.15),rgba(45,212,191,0.05))", border:"1px solid rgba(45,212,191,0.5)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10, padding:22 }}>
+            <span style={{ fontSize:16, color:"rgba(255,255,255,0.2)", textAlign:"center" }}>{s.zh}</span>
+            <span style={{ fontSize:18, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.5 }}>{s.meaning}</span>
+            <span style={{ fontSize:12, color:TEAL, fontStyle:"italic", textAlign:"center" }}>{s.pinyin}</span>
           </div>
         </div>
       </div>
-      <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, marginBottom: 14, zIndex: 1 }}>Tap card to reveal meaning</p>
-      <div onClick={() => setFlipped(f => !f)} style={{ width: "100%", maxWidth: 440, minHeight: 200, perspective: "1000px", cursor: "pointer", marginBottom: 28, zIndex: 1, opacity: dir ? 0 : 1, transition: "opacity 0.2s" }}>
-        <div style={{ position: "relative", width: "100%", minHeight: 200, transformStyle: "preserve-3d", transition: "transform 0.55s cubic-bezier(.4,.2,.2,1)", transform: flipped ? "rotateY(180deg)" : "rotateY(0)" }}>
-          <div style={{ position: "absolute", inset: 0, minHeight: 200, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", background: "linear-gradient(145deg,rgba(45,212,191,0.1),rgba(45,212,191,0.03))", border: `1px solid rgba(45,212,191,0.25)`, borderRadius: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 24, boxShadow: "0 8px 48px rgba(0,0,0,0.4)" }}>
-            <span style={{ fontSize: 28, color: "#fff", fontWeight: 600, textAlign: "center", lineHeight: 1.5 }}>{s.zh}</span>
-            <span style={{ fontSize: 14, color: TEAL, letterSpacing: 1, fontStyle: "italic", textAlign: "center" }}>{s.pinyin}</span>
-          </div>
-          <div style={{ position: "absolute", inset: 0, minHeight: 200, backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "linear-gradient(145deg,rgba(45,212,191,0.15),rgba(45,212,191,0.05))", border: `1px solid rgba(45,212,191,0.5)`, borderRadius: 24, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 28 }}>
-            <span style={{ fontSize: 20, color: "rgba(255,255,255,0.25)", textAlign: "center" }}>{s.zh}</span>
-            <span style={{ fontSize: 20, color: "#fff", fontWeight: 600, textAlign: "center", lineHeight: 1.5 }}>{s.meaning}</span>
-            <span style={{ fontSize: 13, color: TEAL, fontStyle: "italic", textAlign: "center" }}>{s.pinyin}</span>
-          </div>
-        </div>
-      </div>
-      <div style={{ display: "flex", gap: 18, alignItems: "center", zIndex: 1 }}>
-        <button onClick={() => go("prev")} style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>←</button>
-        <button onClick={() => setFlipped(f => !f)} style={{ padding: "11px 26px", borderRadius: 99, background: `linear-gradient(135deg,${TEAL},#60a5fa)`, border: "none", color: "#0f1a1a", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{flipped ? "HIDE" : "REVEAL"}</button>
-        <button onClick={() => go("next")} style={{ width: 50, height: 50, borderRadius: "50%", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>→</button>
+      <div style={{ display:"flex", gap:12, alignItems:"center", zIndex:1, width:"100%", maxWidth:MAX, justifyContent:"center" }}>
+        <button onClick={()=>go("prev")} style={{ width:48, height:48, borderRadius:"50%", background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:18, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>←</button>
+        <button onClick={()=>setFlipped(f=>!f)} style={{ flex:1, maxWidth:180, padding:"12px 0", borderRadius:99, background:`linear-gradient(135deg,${TEAL},#60a5fa)`, border:"none", color:"#0a1a1a", fontSize:13, fontWeight:700, cursor:"pointer" }}>{flipped?"HIDE":"REVEAL"}</button>
+        <button onClick={()=>go("next")} style={{ width:48, height:48, borderRadius:"50%", background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:18, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>→</button>
       </div>
     </div>
   );
 }
 
-// ── QUIZ SET SELECTOR ──────────────────────────────────────────────────────
 function QuizSetSelector({ onSelect, onGoFlash, onGoConv, scores }) {
-  const convScores = scores.conv || {};
+  const convScores = scores.conv||{};
   return (
     <div style={BG}>
-      <div style={BLOB1} /><div style={BLOB2} />
-      <div style={{ textAlign: "center", marginBottom: 16, zIndex: 1 }}>
-        <h1 style={{ color: GOLD, fontSize: 24, fontWeight: 700, letterSpacing: 2, margin: 0 }}>HSK 1 · Quiz</h1>
-        <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, marginTop: 4 }}>Characters + Conversations</p>
+      <div style={BLOB1}/><div style={BLOB2}/>
+      <div style={{ textAlign:"center", marginBottom:12, zIndex:1 }}>
+        <h1 style={{ color:GOLD, fontSize:22, fontWeight:700, letterSpacing:2, margin:0 }}>HSK 1 · Quiz</h1>
+        <p style={{ color:"rgba(255,255,255,0.38)", fontSize:12, marginTop:4 }}>Characters · Conversations</p>
       </div>
-      <TabBar current="quiz" onFlash={onGoFlash} onConv={onGoConv} onQuiz={() => {}} />
-
-      {/* Character sets */}
-      <div style={{ width: "100%", maxWidth: 440, zIndex: 1, marginBottom: 20 }}>
-        <p style={{ color: GOLD, fontSize: 11, fontWeight: 700, letterSpacing: 2, marginBottom: 10 }}>CHARACTERS · HSK 1</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-          {QUIZ_SETS.map((set, i) => {
-            const sc = scores.char?.[i]; const done = sc != null;
-            const col = done ? (sc === 10 ? "#4ade80" : sc >= 7 ? GOLD : "#f87171") : null;
-            return (
-              <button key={i} onClick={() => onSelect({ type: "char", idx: i })} style={{ borderRadius: 14, padding: "12px 6px", background: done ? "rgba(245,200,66,0.1)" : "rgba(255,255,255,0.05)", border: `1px solid ${done ? "rgba(245,200,66,0.4)" : "rgba(255,255,255,0.11)"}`, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: done ? GOLD : "rgba(255,255,255,0.8)" }}>Set {i + 1}</span>
-                {done ? <span style={{ fontSize: 11, color: col, fontWeight: 700 }}>{sc}/10 ✓</span> : <span style={{ fontSize: 16, color: "rgba(255,255,255,0.35)" }}>{set[0].char}</span>}
-              </button>
-            );
-          })}
-          <button onClick={() => onSelect({ type: "char", idx: RANDOM_SET_IDX })} style={{ borderRadius: 14, padding: "12px 6px", background: "linear-gradient(135deg,rgba(100,150,255,0.15),rgba(180,100,255,0.15))", border: "1px solid rgba(150,130,255,0.4)", color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#c4b5fd" }}>Random</span>
-            <span style={{ fontSize: 18 }}>🎲</span>
+      <TabBar current="quiz" onFlash={onGoFlash} onConv={onGoConv} onQuiz={()=>{}}/>
+      <div style={{ width:"100%", maxWidth:MAX, zIndex:1, marginBottom:18 }}>
+        <p style={{ color:GOLD, fontSize:10, fontWeight:700, letterSpacing:2, marginBottom:8 }}>CHARACTERS · HSK 1</p>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:7 }}>
+          {QUIZ_SETS.map((set,i)=>{ const sc=scores.char?.[i]; const done=sc!=null; const col=done?(sc===10?"#4ade80":sc>=7?GOLD:"#f87171"):null; return (
+            <button key={i} onClick={()=>onSelect({type:"char",idx:i})} style={{ borderRadius:12, padding:"11px 4px", background:done?"rgba(245,200,66,0.1)":"rgba(255,255,255,0.05)", border:`1px solid ${done?"rgba(245,200,66,0.4)":"rgba(255,255,255,0.11)"}`, color:"#fff", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
+              <span style={{ fontSize:11, fontWeight:700, color:done?GOLD:"rgba(255,255,255,0.8)" }}>Set {i+1}</span>
+              {done?<span style={{ fontSize:10, color:col, fontWeight:700 }}>{sc}/10 ✓</span>:<span style={{ fontSize:15, color:"rgba(255,255,255,0.35)" }}>{set[0].char}</span>}
+            </button>
+          ); })}
+          <button onClick={()=>onSelect({type:"char",idx:RANDOM_SET_IDX})} style={{ borderRadius:12, padding:"11px 4px", background:"linear-gradient(135deg,rgba(100,150,255,0.15),rgba(180,100,255,0.15))", border:"1px solid rgba(150,130,255,0.4)", color:"#fff", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
+            <span style={{ fontSize:11, fontWeight:700, color:"#c4b5fd" }}>Random</span><span style={{ fontSize:16 }}>🎲</span>
           </button>
         </div>
       </div>
-
-      {/* Conversation sets */}
-      <div style={{ width: "100%", maxWidth: 440, zIndex: 1 }}>
-        <p style={{ color: TEAL, fontSize: 11, fontWeight: 700, letterSpacing: 2, marginBottom: 10 }}>CONVERSATIONS · SENTENCE MEANING</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 8 }}>
-          {CONV_TOPICS.map((topic, i) => {
-            const sc = convScores[topic.id]; const done = sc != null;
-            const total = topic.sentences.length;
-            const col = done ? (sc === total ? "#4ade80" : sc >= total * 0.7 ? GOLD : "#f87171") : null;
-            return (
-              <button key={topic.id} onClick={() => onSelect({ type: "conv", id: topic.id })} style={{ borderRadius: 14, padding: "11px 10px", background: done ? "rgba(45,212,191,0.08)" : "rgba(255,255,255,0.04)", border: `1px solid ${done ? "rgba(45,212,191,0.35)" : "rgba(255,255,255,0.1)"}`, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, textAlign: "left" }}>
-                <span style={{ fontSize: 18 }}>{topic.emoji}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: done ? TEAL : "rgba(255,255,255,0.8)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{topic.category}</div>
-                  {done ? <div style={{ fontSize: 10, color: col, fontWeight: 700 }}>{sc}/{total} ✓</div> : <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{total} questions</div>}
-                </div>
-              </button>
-            );
-          })}
+      <div style={{ width:"100%", maxWidth:MAX, zIndex:1 }}>
+        <p style={{ color:TEAL, fontSize:10, fontWeight:700, letterSpacing:2, marginBottom:8 }}>CONVERSATIONS</p>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:7 }}>
+          {CONV_TOPICS.map(topic=>{ const sc=convScores[topic.id]; const done=sc!=null; const total=topic.sentences.length; const col=done?(sc===total?"#4ade80":sc>=total*0.7?GOLD:"#f87171"):null; return (
+            <button key={topic.id} onClick={()=>onSelect({type:"conv",id:topic.id})} style={{ borderRadius:12, padding:"10px 10px", background:done?"rgba(45,212,191,0.08)":"rgba(255,255,255,0.04)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:7, textAlign:"left" }}>
+              <span style={{ fontSize:17, flexShrink:0 }}>{topic.emoji}</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.8)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{topic.category}</div>
+                {done?<div style={{ fontSize:9, color:col, fontWeight:700 }}>{sc}/{total} ✓</div>:<div style={{ fontSize:9, color:"rgba(255,255,255,0.35)" }}>{total} qs</div>}
+              </div>
+            </button>
+          ); })}
         </div>
       </div>
     </div>
   );
 }
 
-// ── QUIZ QUESTION ──────────────────────────────────────────────────────────
 function QuizMode({ quizSpec, customCards, onBack, onFinish }) {
-  const isConv = quizSpec.type === "conv";
-  const [questions] = useState(() => {
-    if (isConv) {
-      const topic = CONV_TOPICS.find(t => t.id === quizSpec.id);
-      const allSentences = CONV_TOPICS.flatMap(t => t.sentences);
-      return shuffle(topic.sentences).map(s => buildConvQuestion(s, allSentences));
-    }
-    const cards = customCards || (quizSpec.idx === RANDOM_SET_IDX ? getRandomSet() : QUIZ_SETS[quizSpec.idx]);
-    return shuffle(cards).map((c, i) => buildQuestion(c, i % 2 === 0 ? "pinyin" : "meaning"));
+  const isConv = quizSpec.type==="conv";
+  const [questions] = useState(()=>{
+    if(isConv){ const topic=CONV_TOPICS.find(t=>t.id===quizSpec.id); const all=CONV_TOPICS.flatMap(t=>t.sentences); return shuffle(topic.sentences).map(s=>buildConvQuestion(s,all)); }
+    const cards=customCards||(quizSpec.idx===RANDOM_SET_IDX?getRandomSet():QUIZ_SETS[quizSpec.idx]);
+    return shuffle(cards).map((c,i)=>buildQuestion(c,i%2===0?"pinyin":"meaning"));
   });
-  const [qIdx, setQIdx] = useState(0);
-  const [selected, setSelected] = useState(null);
-  const [revealed, setRevealed] = useState(false);
-  const [answers, setAnswers] = useState([]);
-  const q = questions[qIdx]; const isLast = qIdx === questions.length - 1;
-  const LABELS = ["A", "B", "C", "D"];
-  const pick = (opt) => { if (revealed) return; setSelected(opt); setRevealed(true); };
-  const next = () => {
-    const na = [...answers, selected === q.answer];
-    if (isLast) onFinish(na.filter(Boolean).length, na, questions);
-    else { setAnswers(na); setQIdx(q => q + 1); setSelected(null); setRevealed(false); }
-  };
-  const label = isConv ? `${CONV_TOPICS.find(t => t.id === quizSpec.id)?.emoji} ${CONV_TOPICS.find(t => t.id === quizSpec.id)?.category}` : quizSpec.idx === RANDOM_SET_IDX ? "🎲 Random" : `Set ${quizSpec.idx + 1}`;
-  const accentColor = isConv ? TEAL : GOLD;
+  const [qIdx,setQIdx]=useState(0); const [selected,setSelected]=useState(null); const [revealed,setRevealed]=useState(false); const [answers,setAnswers]=useState([]);
+  const q=questions[qIdx]; const isLast=qIdx===questions.length-1;
+  const LABELS=["A","B","C","D"]; const accent=isConv?TEAL:GOLD;
+  const topic=isConv?CONV_TOPICS.find(t=>t.id===quizSpec.id):null;
+  const headerLabel=isConv?`${topic?.emoji} ${topic?.category}`:quizSpec.idx===RANDOM_SET_IDX?"🎲 Random":`Set ${quizSpec.idx+1}`;
+  const pick=(val)=>{ if(revealed)return; setSelected(val); setRevealed(true); };
+  const next=()=>{ const na=[...answers,selected===q.answer]; if(isLast)onFinish(na.filter(Boolean).length,na,questions); else{ setAnswers(na);setQIdx(i=>i+1);setSelected(null);setRevealed(false); } };
   return (
     <div style={BG}>
-      <div style={BLOB1} /><div style={BLOB2} />
-      <div style={{ display: "flex", alignItems: "center", width: "100%", maxWidth: 440, marginBottom: 16, zIndex: 1, gap: 12 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-            <span style={{ color: accentColor, fontSize: 12, fontWeight: 700 }}>{label}</span>
-            <span style={{ color: "rgba(255,255,255,0.42)", fontSize: 12 }}>{qIdx + 1} / {questions.length}</span>
-          </div>
-          <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 99, height: 5, overflow: "hidden" }}>
-            <div style={{ width: `${(qIdx / questions.length) * 100}%`, height: "100%", background: `linear-gradient(90deg,${accentColor},${isConv ? "#60a5fa" : ORANGE})`, borderRadius: 99, transition: "width 0.3s" }} />
-          </div>
-        </div>
+      <div style={BLOB1}/><div style={BLOB2}/>
+      <div style={{ display:"flex", alignItems:"center", width:"100%", maxWidth:MAX, marginBottom:12, zIndex:1, gap:10 }}>
+        <BackBtn onClick={onBack} label="Sets"/>
+        <div style={{ flex:1 }}><ProgressRow label={headerLabel} current={qIdx+1} total={questions.length} accent={accent}/></div>
       </div>
-      <p style={{ color: "rgba(255,255,255,0.42)", fontSize: 12, letterSpacing: 1, marginBottom: 10, zIndex: 1 }}>{q.label}</p>
-      <div style={{ width: "100%", maxWidth: 440, background: "linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))", border: `1px solid ${accentColor}44`, borderRadius: 22, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: isConv ? 100 : 140, marginBottom: 18, zIndex: 1, padding: "20px 20px", boxShadow: "0 8px 40px rgba(0,0,0,0.35)" }}>
-        {isConv
-          ? <><span style={{ fontSize: 22, color: "#fff", fontWeight: 600, textAlign: "center", lineHeight: 1.6 }}>{q.prompt}</span><span style={{ fontSize: 13, color: accentColor, fontStyle: "italic", marginTop: 6, textAlign: "center" }}>{q.sub}</span></>
-          : <span style={{ fontSize: 80, color: "#fff", textShadow: `0 4px 24px ${accentColor}44`, lineHeight: 1 }}>{q.prompt}</span>
-        }
+      <p style={{ color:"rgba(255,255,255,0.42)", fontSize:11, letterSpacing:1, marginBottom:8, zIndex:1 }}>{q.label}</p>
+      <div style={{ width:"100%", maxWidth:MAX, background:"linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))", border:`1px solid ${accent}44`, borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:isConv?85:125, marginBottom:14, zIndex:1, padding:"16px 18px", boxShadow:"0 8px 40px rgba(0,0,0,0.35)" }}>
+        {isConv?<><span style={{ fontSize:19, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.6 }}>{q.prompt}</span><span style={{ fontSize:12, color:accent, fontStyle:"italic", marginTop:5, textAlign:"center" }}>{q.sub}</span></>:<span style={{ fontSize:68, color:"#fff", textShadow:`0 4px 24px ${accent}44`, lineHeight:1 }}>{q.prompt}</span>}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 9, width: "100%", maxWidth: 440, zIndex: 1 }}>
-        {q.options.map((opt, i) => {
-          const val = isConv ? opt.value : opt.value;
-          const isCorrect = val === q.answer, isChosen = val === selected;
-          let bg = "rgba(255,255,255,0.05)", border = "1px solid rgba(255,255,255,0.11)", lbg = "rgba(255,255,255,0.1)", tc = "#fff", tc2 = "rgba(255,255,255,0.45)";
-          if (revealed) {
-            if (isCorrect) { bg = "rgba(74,222,128,0.12)"; border = "1px solid rgba(74,222,128,0.5)"; lbg = "rgba(74,222,128,0.28)"; tc = "#4ade80"; tc2 = "rgba(74,222,128,0.7)"; }
-            else if (isChosen) { bg = "rgba(248,113,113,0.12)"; border = "1px solid rgba(248,113,113,0.5)"; lbg = "rgba(248,113,113,0.28)"; tc = "#f87171"; tc2 = "rgba(248,113,113,0.7)"; }
-          }
+      <div style={{ display:"flex", flexDirection:"column", gap:7, width:"100%", maxWidth:MAX, zIndex:1 }}>
+        {q.options.map((opt,i)=>{ const val=opt.value??opt; const isCorrect=val===q.answer, isChosen=val===selected;
+          let bg="rgba(255,255,255,0.05)",border="1px solid rgba(255,255,255,0.11)",lbg="rgba(255,255,255,0.1)",tc="#fff",tc2="rgba(255,255,255,0.45)";
+          if(revealed){ if(isCorrect){bg="rgba(74,222,128,0.12)";border="1px solid rgba(74,222,128,0.5)";lbg="rgba(74,222,128,0.28)";tc="#4ade80";tc2="rgba(74,222,128,0.7)";} else if(isChosen){bg="rgba(248,113,113,0.12)";border="1px solid rgba(248,113,113,0.5)";lbg="rgba(248,113,113,0.28)";tc="#f87171";tc2="rgba(248,113,113,0.7)";} }
           return (
-            <button key={i} onClick={() => pick(val)} style={{ display: "flex", alignItems: "center", gap: 10, background: bg, border, borderRadius: 14, padding: "11px 14px", cursor: revealed ? "default" : "pointer", transition: "all 0.22s", textAlign: "left" }}>
-              <span style={{ width: 26, height: 26, borderRadius: 7, background: lbg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: revealed && isCorrect ? "#4ade80" : revealed && isChosen && !isCorrect ? "#f87171" : accentColor, flexShrink: 0 }}>{LABELS[i]}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {isConv
-                  ? <div style={{ fontSize: 13, color: tc, lineHeight: 1.4 }}>{opt.display || opt.value}</div>
-                  : <><div style={{ fontSize: 13, color: tc, fontStyle: q.type === "pinyin" ? "italic" : "normal" }}>{opt.pinyin}</div><div style={{ fontSize: 11, color: tc2, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{opt.meaning}</div></>
-                }
+            <button key={i} onClick={()=>pick(val)} style={{ display:"flex", alignItems:"center", gap:9, background:bg, border, borderRadius:14, padding:"11px 12px", cursor:revealed?"default":"pointer", transition:"all 0.2s", textAlign:"left", width:"100%" }}>
+              <span style={{ width:26, height:26, borderRadius:7, background:lbg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:revealed&&isCorrect?"#4ade80":revealed&&isChosen&&!isCorrect?"#f87171":accent, flexShrink:0 }}>{LABELS[i]}</span>
+              <div style={{ flex:1, minWidth:0 }}>
+                {isConv?<div style={{ fontSize:13, color:tc, lineHeight:1.4 }}>{opt.display??opt.value}</div>
+                  :<><div style={{ fontSize:13, color:tc, fontStyle:q.type==="pinyin"?"italic":"normal" }}>{opt.pinyin}</div><div style={{ fontSize:11, color:tc2, marginTop:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{opt.meaning}</div></>}
               </div>
-              {revealed && isCorrect && <span style={{ fontSize: 15, marginLeft: "auto", flexShrink: 0, color: "#4ade80" }}>✓</span>}
-              {revealed && isChosen && !isCorrect && <span style={{ fontSize: 15, marginLeft: "auto", flexShrink: 0, color: "#f87171" }}>✗</span>}
+              {revealed&&isCorrect&&<span style={{ fontSize:14, color:"#4ade80", flexShrink:0 }}>✓</span>}
+              {revealed&&isChosen&&!isCorrect&&<span style={{ fontSize:14, color:"#f87171", flexShrink:0 }}>✗</span>}
             </button>
           );
         })}
       </div>
-      {revealed && <button onClick={next} style={{ marginTop: 20, padding: "12px 40px", borderRadius: 99, background: `linear-gradient(135deg,${accentColor},${isConv ? "#60a5fa" : ORANGE})`, border: "none", color: isConv ? "#0f1a1a" : "#1a1500", fontSize: 13, fontWeight: 700, cursor: "pointer", zIndex: 1 }}>{isLast ? "SEE RESULTS" : "NEXT →"}</button>}
+      {revealed&&<button onClick={next} style={{ marginTop:16, padding:"13px 0", width:"100%", maxWidth:MAX, borderRadius:99, background:`linear-gradient(135deg,${accent},${isConv?"#60a5fa":ORANGE})`, border:"none", color:isConv?"#0a1a1a":"#1a1500", fontSize:14, fontWeight:700, cursor:"pointer", zIndex:1 }}>{isLast?"SEE RESULTS":"NEXT →"}</button>}
     </div>
   );
 }
 
-// ── RANDOM PICKER ─────────────────────────────────────────────────────────
 function RandomPicker({ mode, onStart, onBack }) {
-  const [selected, setSelected] = useState(Array(16).fill(true));
-  const toggle = (i) => setSelected(p => { const n = [...p]; n[i] = !n[i]; return n; });
-  const allOn = selected.every(Boolean); const count = selected.filter(Boolean).length;
-  function buildRandomCards() {
-    const pool = []; selected.forEach((on, i) => { if (on) pool.push(...QUIZ_SETS[i]); });
-    const a = [...pool]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, 10);
-  }
+  const [selected,setSelected]=useState(Array(16).fill(true));
+  const toggle=(i)=>setSelected(p=>{ const n=[...p]; n[i]=!n[i]; return n; });
+  const allOn=selected.every(Boolean); const count=selected.filter(Boolean).length;
+  function buildRandomCards(){ const pool=[]; selected.forEach((on,i)=>{ if(on)pool.push(...QUIZ_SETS[i]); }); const a=[...pool]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a.slice(0,10); }
   return (
     <div style={BG}>
-      <div style={BLOB1} /><div style={BLOB2} />
-      <div style={{ display: "flex", alignItems: "center", width: "100%", maxWidth: 440, marginBottom: 16, zIndex: 1, gap: 12 }}>
-        <button onClick={onBack} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 22, cursor: "pointer", padding: 0 }}>←</button>
-        <div><h2 style={{ color: GOLD, fontSize: 18, fontWeight: 700, margin: 0 }}>🎲 Random Mix</h2><p style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, margin: "2px 0 0" }}>Pick which sets to draw from</p></div>
+      <div style={BLOB1}/><div style={BLOB2}/>
+      <div style={{ width:"100%", maxWidth:MAX, zIndex:1, marginBottom:16 }}>
+        <BackBtn onClick={onBack} label="Back"/>
+        <div style={{ textAlign:"center", marginTop:10 }}>
+          <h2 style={{ color:GOLD, fontSize:20, fontWeight:700, margin:0 }}>🎲 Random Mix</h2>
+          <p style={{ color:"rgba(255,255,255,0.38)", fontSize:12, marginTop:3 }}>Choose which sets to draw from</p>
+        </div>
       </div>
-      <div style={{ width: "100%", maxWidth: 440, marginBottom: 10, zIndex: 1 }}>
-        <button onClick={() => setSelected(Array(16).fill(!allOn))} style={{ padding: "6px 14px", borderRadius: 99, background: allOn ? "rgba(245,200,66,0.15)" : "rgba(255,255,255,0.06)", border: `1px solid ${allOn ? "rgba(245,200,66,0.4)" : "rgba(255,255,255,0.15)"}`, color: allOn ? GOLD : "rgba(255,255,255,0.55)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>{allOn ? "Deselect All" : "Select All"}</button>
+      <div style={{ width:"100%", maxWidth:MAX, marginBottom:10, zIndex:1 }}>
+        <button onClick={()=>setSelected(Array(16).fill(!allOn))} style={{ padding:"7px 14px", borderRadius:99, background:allOn?"rgba(245,200,66,0.15)":"rgba(255,255,255,0.07)", border:`1px solid ${allOn?"rgba(245,200,66,0.4)":"rgba(255,255,255,0.15)"}`, color:allOn?GOLD:"rgba(255,255,255,0.6)", fontSize:11, fontWeight:700, cursor:"pointer" }}>{allOn?"Deselect All":"Select All"}</button>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, width: "100%", maxWidth: 440, zIndex: 1, marginBottom: 20 }}>
-        {QUIZ_SETS.map((set, i) => {
-          const on = selected[i];
-          return <button key={i} onClick={() => toggle(i)} style={{ borderRadius: 14, padding: "12px 6px", background: on ? "rgba(245,200,66,0.15)" : "rgba(255,255,255,0.04)", border: `1px solid ${on ? "rgba(245,200,66,0.5)" : "rgba(255,255,255,0.1)"}`, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, position: "relative" }}>
-            {on && <span style={{ position: "absolute", top: 4, right: 6, fontSize: 9, color: GOLD }}>✓</span>}
-            <span style={{ fontSize: 12, fontWeight: 700, color: on ? GOLD : "rgba(255,255,255,0.5)" }}>Set {i + 1}</span>
-            <span style={{ fontSize: 16, color: on ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.2)" }}>{set[0].char}</span>
-          </button>;
-        })}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:7, width:"100%", maxWidth:MAX, zIndex:1, marginBottom:20 }}>
+        {QUIZ_SETS.map((set,i)=>{ const on=selected[i]; return (
+          <button key={i} onClick={()=>toggle(i)} style={{ borderRadius:12, padding:"11px 4px", background:on?"rgba(245,200,66,0.15)":"rgba(255,255,255,0.04)", border:`1px solid ${on?"rgba(245,200,66,0.5)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:3, position:"relative" }}>
+            {on&&<span style={{ position:"absolute", top:4, right:6, fontSize:8, color:GOLD }}>✓</span>}
+            <span style={{ fontSize:11, fontWeight:700, color:on?GOLD:"rgba(255,255,255,0.5)" }}>Set {i+1}</span>
+            <span style={{ fontSize:15, color:on?"rgba(255,255,255,0.6)":"rgba(255,255,255,0.2)" }}>{set[0].char}</span>
+          </button>
+        ); })}
       </div>
-      <button onClick={() => { if (count > 0) onStart(buildRandomCards()); }} style={{ padding: "13px 38px", borderRadius: 99, background: count > 0 ? `linear-gradient(135deg,${GOLD},${ORANGE})` : "rgba(255,255,255,0.08)", border: "none", color: count > 0 ? "#1a1500" : "rgba(255,255,255,0.3)", fontSize: 13, fontWeight: 700, cursor: count > 0 ? "pointer" : "default", zIndex: 1 }}>
-        {count === 0 ? "Select at least 1 set" : `Start · ${count * 10} cards in pool`}
+      <button onClick={()=>{ if(count>0)onStart(buildRandomCards()); }} style={{ padding:"13px 0", width:"100%", maxWidth:MAX, borderRadius:99, background:count>0?`linear-gradient(135deg,${GOLD},${ORANGE})`:"rgba(255,255,255,0.08)", border:"none", color:count>0?"#1a1500":"rgba(255,255,255,0.3)", fontSize:13, fontWeight:700, cursor:count>0?"pointer":"default", zIndex:1 }}>
+        {count===0?"Select at least 1 set":`Start · ${count*10} cards in pool`}
       </button>
     </div>
   );
 }
 
-// ── RESULTS ────────────────────────────────────────────────────────────────
-function ResultsScreen({ quizSpec, score, answers, questions, usedCards, onRetry, onBack }) {
-  const isConv = quizSpec?.type === "conv";
-  const total = answers.length;
-  const pct = Math.round((score / total) * 100);
-  const sc = pct === 100 ? "#4ade80" : pct >= 70 ? GOLD : "#f87171";
-  const emoji = pct === 100 ? "🏆" : pct >= 70 ? "👏" : "💪";
-  const msg = pct === 100 ? "Perfect score!" : pct >= 70 ? "Great job!" : "Keep practicing!";
-  const accentColor = isConv ? TEAL : GOLD;
-  const topic = isConv ? CONV_TOPICS.find(t => t.id === quizSpec.id) : null;
-  const label = isConv ? `${topic?.emoji} ${topic?.category}` : quizSpec?.idx === RANDOM_SET_IDX ? "🎲 Random" : `Set ${(quizSpec?.idx ?? 0) + 1}`;
+function ResultsScreen({ quizSpec, score, answers, questions, onRetry, onHome }) {
+  const isConv = quizSpec?.type==="conv";
+  const total=answers.length; const pct=Math.round((score/total)*100);
+  const sc=pct===100?"#4ade80":pct>=70?GOLD:"#f87171";
+  const emoji=pct===100?"🏆":pct>=70?"👏":"💪";
+  const msg=pct===100?"Perfect score!":pct>=70?"Great job!":"Keep practicing!";
+  const accent=isConv?TEAL:GOLD;
+  const topic=isConv?CONV_TOPICS.find(t=>t.id===quizSpec.id):null;
+  const label=isConv?`${topic?.emoji} ${topic?.category}`:quizSpec?.idx===RANDOM_SET_IDX?"🎲 Random":`Set ${(quizSpec?.idx??0)+1}`;
   return (
     <div style={BG}>
-      <div style={BLOB1} /><div style={BLOB2} />
-      <div style={{ textAlign: "center", marginBottom: 20, zIndex: 1 }}>
-        <div style={{ fontSize: 48 }}>{emoji}</div>
-        <h2 style={{ color: "#fff", fontSize: 22, fontWeight: 700, margin: "8px 0 4px" }}>{msg}</h2>
-        <p style={{ color: "rgba(255,255,255,0.38)", fontSize: 13 }}>{label} Results</p>
-        <div style={{ fontSize: 50, fontWeight: 800, color: sc, textShadow: `0 0 30px ${sc}55`, marginTop: 6 }}>{score}<span style={{ fontSize: 22, color: "rgba(255,255,255,0.28)" }}>/{total}</span></div>
+      <div style={BLOB1}/><div style={BLOB2}/>
+      <div style={{ width:"100%", maxWidth:MAX, zIndex:1, marginBottom:14 }}>
+        <BackBtn onClick={onHome} label="Home"/>
       </div>
-      <div style={{ width: "100%", maxWidth: 440, display: "flex", flexDirection: "column", gap: 7, zIndex: 1, marginBottom: 20 }}>
-        {answers.map((ok, i) => {
-          const q = questions[i];
-          return (
-            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, background: ok ? "rgba(74,222,128,0.07)" : "rgba(248,113,113,0.07)", border: `1px solid ${ok ? "rgba(74,222,128,0.22)" : "rgba(248,113,113,0.22)"}`, borderRadius: 12, padding: "10px 12px" }}>
-              <span style={{ fontSize: isConv ? 18 : 24, lineHeight: 1.3, color: "#fff", flexShrink: 0 }}>{q.prompt}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginBottom: 2, letterSpacing: 1 }}>{isConv ? "MEANING" : q.type?.toUpperCase()}</div>
-                <div style={{ fontSize: 12, color: "#fff", lineHeight: 1.4 }}>{q.answer}</div>
-              </div>
-              <span style={{ fontSize: 16, color: ok ? "#4ade80" : "#f87171", flexShrink: 0 }}>{ok ? "✓" : "✗"}</span>
+      <div style={{ textAlign:"center", marginBottom:16, zIndex:1 }}>
+        <div style={{ fontSize:44 }}>{emoji}</div>
+        <h2 style={{ color:"#fff", fontSize:22, fontWeight:700, margin:"8px 0 4px" }}>{msg}</h2>
+        <p style={{ color:"rgba(255,255,255,0.38)", fontSize:13 }}>{label}</p>
+        <div style={{ fontSize:46, fontWeight:800, color:sc, textShadow:`0 0 30px ${sc}55`, marginTop:6 }}>{score}<span style={{ fontSize:20, color:"rgba(255,255,255,0.28)" }}>/{total}</span></div>
+      </div>
+      <div style={{ width:"100%", maxWidth:MAX, display:"flex", flexDirection:"column", gap:7, zIndex:1, marginBottom:18 }}>
+        {answers.map((ok,i)=>{ const q=questions[i]; return (
+          <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:9, background:ok?"rgba(74,222,128,0.07)":"rgba(248,113,113,0.07)", border:`1px solid ${ok?"rgba(74,222,128,0.22)":"rgba(248,113,113,0.22)"}`, borderRadius:12, padding:"10px 11px" }}>
+            <span style={{ fontSize:isConv?14:20, lineHeight:1.4, color:"#fff", flexShrink:0 }}>{q.prompt}</span>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", marginBottom:2, letterSpacing:1 }}>{isConv?"MEANING":q.type?.toUpperCase()}</div>
+              <div style={{ fontSize:12, color:"#fff", lineHeight:1.4 }}>{q.answer}</div>
             </div>
-          );
-        })}
+            <span style={{ fontSize:15, color:ok?"#4ade80":"#f87171", flexShrink:0 }}>{ok?"✓":"✗"}</span>
+          </div>
+        ); })}
       </div>
-      <div style={{ display: "flex", gap: 10, zIndex: 1 }}>
-        <button onClick={onBack} style={{ padding: "11px 20px", borderRadius: 99, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>ALL SETS</button>
-        <button onClick={onRetry} style={{ padding: "11px 26px", borderRadius: 99, background: `linear-gradient(135deg,${accentColor},${isConv ? "#60a5fa" : ORANGE})`, border: "none", color: isConv ? "#0f1a1a" : "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>RETRY ↺</button>
+      <div style={{ display:"flex", gap:10, zIndex:1, width:"100%", maxWidth:MAX }}>
+        <button onClick={onHome} style={{ flex:1, padding:"13px 0", borderRadius:99, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>🏠 Home</button>
+        <button onClick={onRetry} style={{ flex:1, padding:"13px 0", borderRadius:99, background:`linear-gradient(135deg,${accent},${isConv?"#60a5fa":ORANGE})`, border:"none", color:isConv?"#0a1a1a":"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>RETRY ↺</button>
       </div>
     </div>
   );
 }
 
-// ── ROOT APP ───────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen, setScreenState] = useState("flashSelect");
-  const [activeSet, setActiveSet] = useState(null);
-  const [activeQuizSpec, setActiveQuizSpec] = useState(null);
-  const [activeConvTopic, setActiveConvTopic] = useState(null);
-  const [randomCards, setRandomCards] = useState(null);
-  const [randomMode, setRandomMode] = useState(null);
-  const [quizResult, setQuizResult] = useState(null);
-  const [quizCards, setQuizCards] = useState(null);
-  const [quizQuestions, setQuizQuestions] = useState(null);
+  const [screen,setScreenState]=useState("flashSelect");
+  const [activeSet,setActiveSet]=useState(null);
+  const [activeQuizSpec,setActiveQuizSpec]=useState(null);
+  const [activeConvTopic,setActiveConvTopic]=useState(null);
+  const [randomCards,setRandomCards]=useState(null);
+  const [randomMode,setRandomMode]=useState(null);
+  const [quizResult,setQuizResult]=useState(null);
+  const [quizCards,setQuizCards]=useState(null);
+  const [quizQuestions,setQuizQuestions]=useState(null);
+  const [scores,setScores]=useState(()=>({ char:lsGet(LS_QUIZ_SCORES,{}), conv:lsGet("hsk1_conv_scores",{}) }));
+  const [flashProgress,setFlashProgress]=useState(()=>lsGet(LS_FLASH_PROGRESS,{}));
+  const [flashDone,setFlashDone]=useState(()=>lsGet(LS_FLASH_DONE,{}));
+  const [convProgress,setConvProgress]=useState(()=>lsGet(LS_CONV_PROGRESS,{}));
 
-  const [scores, setScores] = useState(() => ({ char: lsGet(LS_QUIZ_SCORES, {}), conv: lsGet("hsk1_conv_scores", {}) }));
-  const [flashProgress, setFlashProgress] = useState(() => lsGet(LS_FLASH_PROGRESS, {}));
-  const [flashDone, setFlashDone] = useState(() => lsGet(LS_FLASH_DONE, {}));
-  const [convProgress, setConvProgress] = useState(() => lsGet(LS_CONV_PROGRESS, {}));
+  const setScreen=(s)=>{ window.history.pushState({screen:s},"",""); setScreenState(s); };
 
-  const setScreen = (s) => { window.history.pushState({ screen: s }, "", ""); setScreenState(s); };
+  useEffect(()=>{
+    const onPop=()=>{ const s=window.history.state?.screen; setScreenState(s||"flashSelect"); };
+    window.addEventListener("popstate",onPop);
+    window.history.replaceState({screen:"flashSelect"},"","");
+    return ()=>window.removeEventListener("popstate",onPop);
+  },[]);
 
-  useEffect(() => {
-    const onPop = () => { const s = window.history.state?.screen; setScreenState(s || "flashSelect"); };
-    window.addEventListener("popstate", onPop);
-    window.history.replaceState({ screen: "flashSelect" }, "", "");
-    return () => window.removeEventListener("popstate", onPop);
-  }, []);
+  const markFlashProgress=(setIdx,cardIndex,total)=>{ if(setIdx===RANDOM_SET_IDX)return; const done=cardIndex===total-1; setFlashProgress(prev=>{ const n={...prev,[setIdx]:cardIndex}; lsSet(LS_FLASH_PROGRESS,n); return n; }); if(done)setFlashDone(prev=>{ const n={...prev,[setIdx]:true}; lsSet(LS_FLASH_DONE,n); return n; }); };
+  const markConvProgress=(topicId,index)=>{ setConvProgress(prev=>{ const n={...prev,[topicId]:Math.max(prev[topicId]||0,index)}; lsSet(LS_CONV_PROGRESS,n); return n; }); };
 
-  const markFlashProgress = (setIdx, cardIndex, total) => {
-    if (setIdx === RANDOM_SET_IDX) return;
-    const done = cardIndex === total - 1;
-    setFlashProgress(prev => { const n = { ...prev, [setIdx]: cardIndex }; lsSet(LS_FLASH_PROGRESS, n); return n; });
-    if (done) setFlashDone(prev => { const n = { ...prev, [setIdx]: true }; lsSet(LS_FLASH_DONE, n); return n; });
-  };
-
-  const markConvProgress = (topicId, index) => {
-    setConvProgress(prev => { const n = { ...prev, [topicId]: Math.max(prev[topicId] || 0, index) }; lsSet(LS_CONV_PROGRESS, n); return n; });
-  };
-
-  const finishQuiz = (score, answers, questions) => {
-    setQuizResult({ score, answers });
-    setQuizQuestions(questions);
-    const spec = activeQuizSpec;
-    if (spec.type === "char" && spec.idx !== RANDOM_SET_IDX) {
-      setScores(prev => { const n = { ...prev, char: { ...prev.char, [spec.idx]: score } }; lsSet(LS_QUIZ_SCORES, n.char); return n; });
-    } else if (spec.type === "conv") {
-      setScores(prev => { const n = { ...prev, conv: { ...prev.conv, [spec.id]: score } }; lsSet("hsk1_conv_scores", n.conv); return n; });
-    }
+  const finishQuiz=(score,answers,questions)=>{
+    setQuizResult({score,answers}); setQuizQuestions(questions);
+    const spec=activeQuizSpec;
+    if(spec.type==="char"&&spec.idx!==RANDOM_SET_IDX){ setScores(prev=>{ const n={...prev,char:{...prev.char,[spec.idx]:score}}; lsSet(LS_QUIZ_SCORES,n.char); return n; }); }
+    else if(spec.type==="conv"){ setScores(prev=>{ const n={...prev,conv:{...prev.conv,[spec.id]:score}}; lsSet("hsk1_conv_scores",n.conv); return n; }); }
     setScreen("results");
   };
 
-  const handleFlashSelect = (i) => {
-    if (i === RANDOM_SET_IDX) { setRandomMode("flash"); setScreen("randomPicker"); }
-    else { setActiveSet(i); setRandomCards(null); setScreen("flash"); }
-  };
+  const goHome=()=>setScreen("flashSelect");
+  const goFlash=()=>setScreen("flashSelect");
+  const goConv=()=>setScreen("convSelect");
+  const goQuiz=()=>setScreen("quizSelect");
 
-  const handleQuizSelect = (spec) => {
-    if (spec.type === "char" && spec.idx === RANDOM_SET_IDX) { setRandomMode("quiz"); setScreen("randomPicker"); }
-    else { setActiveQuizSpec(spec); setQuizCards(null); setScreen("quiz"); }
-  };
+  const handleFlashSelect=(i)=>{ if(i===RANDOM_SET_IDX){setRandomMode("flash");setScreen("randomPicker");} else{setActiveSet(i);setRandomCards(null);setScreen("flash");} };
+  const handleQuizSelect=(spec)=>{ if(spec.type==="char"&&spec.idx===RANDOM_SET_IDX){setRandomMode("quiz");setScreen("randomPicker");} else{setActiveQuizSpec(spec);setQuizCards(null);setScreen("quiz");} };
+  const handleRandomStart=(cards)=>{ if(randomMode==="flash"){setActiveSet(RANDOM_SET_IDX);setRandomCards(cards);setScreen("flash");} else{setActiveQuizSpec({type:"char",idx:RANDOM_SET_IDX});setQuizCards(cards);setScreen("quiz");} };
 
-  const handleRandomStart = (cards) => {
-    if (randomMode === "flash") { setActiveSet(RANDOM_SET_IDX); setRandomCards(cards); setScreen("flash"); }
-    else { setActiveQuizSpec({ type: "char", idx: RANDOM_SET_IDX }); setQuizCards(cards); setScreen("quiz"); }
-  };
-
-  const goFlash = () => setScreen("flashSelect");
-  const goConv = () => setScreen("convSelect");
-  const goQuiz = () => setScreen("quizSelect");
-
-  if (screen === "flashSelect") return <FlashSetSelector onSelect={handleFlashSelect} onGoConv={goConv} onGoQuiz={goQuiz} flashProgress={flashProgress} flashDone={flashDone} />;
-  if (screen === "flash") return <FlashcardMode key={`flash-${activeSet}`} setIdx={activeSet} customCards={activeSet === RANDOM_SET_IDX ? randomCards : null} initialIndex={flashProgress[activeSet] || 0} onProgress={markFlashProgress} onBack={goFlash} onGoConv={goConv} onGoQuiz={goQuiz} />;
-  if (screen === "convSelect") return <ConvSelector onSelect={id => { setActiveConvTopic(id); setScreen("convFlash"); }} onGoFlash={goFlash} onGoQuiz={goQuiz} convProgress={convProgress} />;
-  if (screen === "convFlash") return <ConvFlashMode key={`conv-${activeConvTopic}`} topicId={activeConvTopic} initialIndex={convProgress[activeConvTopic] || 0} onProgress={markConvProgress} onBack={goConv} onGoFlash={goFlash} onGoQuiz={goQuiz} />;
-  if (screen === "randomPicker") return <RandomPicker mode={randomMode} onStart={handleRandomStart} onBack={() => setScreen(randomMode === "flash" ? "flashSelect" : "quizSelect")} />;
-  if (screen === "quizSelect") return <QuizSetSelector scores={scores} onSelect={handleQuizSelect} onGoFlash={goFlash} onGoConv={goConv} />;
-  if (screen === "quiz") return <QuizMode key={`quiz-${JSON.stringify(activeQuizSpec)}-${Date.now()}`} quizSpec={activeQuizSpec} customCards={quizCards} onBack={goQuiz} onFinish={finishQuiz} />;
-  if (screen === "results") return <ResultsScreen quizSpec={activeQuizSpec} score={quizResult.score} answers={quizResult.answers} questions={quizQuestions} usedCards={quizCards} onRetry={() => setScreen("quiz")} onBack={goQuiz} />;
+  if(screen==="flashSelect") return <FlashSetSelector onSelect={handleFlashSelect} onGoConv={goConv} onGoQuiz={goQuiz} flashProgress={flashProgress} flashDone={flashDone}/>;
+  if(screen==="flash") return <FlashcardMode key={`flash-${activeSet}`} setIdx={activeSet} customCards={activeSet===RANDOM_SET_IDX?randomCards:null} initialIndex={flashProgress[activeSet]||0} onProgress={markFlashProgress} onBack={goFlash} onGoConv={goConv} onGoQuiz={goQuiz}/>;
+  if(screen==="convSelect") return <ConvSelector onSelect={id=>{setActiveConvTopic(id);setScreen("convFlash");}} onGoFlash={goFlash} onGoQuiz={goQuiz} convProgress={convProgress}/>;
+  if(screen==="convFlash") return <ConvFlashMode key={`conv-${activeConvTopic}`} topicId={activeConvTopic} initialIndex={convProgress[activeConvTopic]||0} onProgress={markConvProgress} onBack={goConv} onGoFlash={goFlash} onGoQuiz={goQuiz}/>;
+  if(screen==="randomPicker") return <RandomPicker mode={randomMode} onStart={handleRandomStart} onBack={()=>setScreen(randomMode==="flash"?"flashSelect":"quizSelect")}/>;
+  if(screen==="quizSelect") return <QuizSetSelector scores={scores} onSelect={handleQuizSelect} onGoFlash={goFlash} onGoConv={goConv}/>;
+  if(screen==="quiz") return <QuizMode key={`quiz-${JSON.stringify(activeQuizSpec)}-${Date.now()}`} quizSpec={activeQuizSpec} customCards={quizCards} onBack={goQuiz} onFinish={finishQuiz}/>;
+  if(screen==="results") return <ResultsScreen quizSpec={activeQuizSpec} score={quizResult.score} answers={quizResult.answers} questions={quizQuestions} onRetry={()=>setScreen("quiz")} onHome={goHome}/>;
 }
