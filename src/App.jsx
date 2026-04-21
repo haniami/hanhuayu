@@ -858,7 +858,7 @@ function ConvSelector({ onSelect, onGoFlash, onGoQuiz, convProgress }) {
                     <button key={topic.id} onClick={()=>onSelect(topic.id)} style={{ borderRadius:13, padding:"11px 10px", background:done?"rgba(45,212,191,0.1)":"rgba(255,255,255,0.05)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:8, textAlign:"left" }}>
                       <span style={{ fontSize:20, flexShrink:0 }}>{topic.emoji}</span>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.85)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{topic.category}</div>
+                        <div style={{ fontSize:11, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.85)", lineHeight:1.3 }}>{topic.category}</div>
                         <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", marginTop:2 }}>{topic.sentences.length} sentences{done?" · ✓":prog>0?` · ${prog}/${topic.sentences.length}`:""}</div>
                       </div>
                     </button>
@@ -942,7 +942,7 @@ function QuizSetSelector({ onSelect, onGoFlash, onGoConv, scores }) {
             <button key={topic.id} onClick={()=>onSelect({type:"conv",id:topic.id})} style={{ borderRadius:12, padding:"10px 10px", background:done?"rgba(45,212,191,0.08)":"rgba(255,255,255,0.04)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:7, textAlign:"left" }}>
               <span style={{ fontSize:17, flexShrink:0 }}>{topic.emoji}</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:10, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.8)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{topic.category}</div>
+                <div style={{ fontSize:10, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.8)", lineHeight:1.2, maxHeight:"2.4em", overflow:"hidden" }}>{topic.category}</div>
                 {done?<div style={{ fontSize:9, color:col, fontWeight:700 }}>{sc}/{total} ✓</div>:<div style={{ fontSize:9, color:"rgba(255,255,255,0.35)" }}>{total} qs</div>}
               </div>
             </button>
