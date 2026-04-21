@@ -205,7 +205,7 @@ function ModeToggle({ current, onFlash, onQuiz }) {
 }
 
 // ── FLASHCARD SET SELECTOR ──────────────────────────────────────────────────
-function FlashSetSelector({ onSelect, onGoQuiz }) {
+function FlashSetSelector({ onSelect, onGoQuiz, flashProgress, flashDone }) {
   return (
     <div style={BG}>
       <div style={BLOB1} /><div style={BLOB2} />
@@ -215,32 +215,41 @@ function FlashSetSelector({ onSelect, onGoQuiz }) {
       </div>
       <ModeToggle current="flash" onFlash={() => {}} onQuiz={onGoQuiz} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, width: "100%", maxWidth: 440, zIndex: 1 }}>
-        {QUIZ_SETS.map((set, i) => (
-          <button key={i} onClick={() => onSelect(i)} style={{ borderRadius: 14, padding: "14px 6px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.11)", color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, transition: "all 0.18s" }}
-            onMouseEnter={e => e.currentTarget.style.background = "rgba(245,200,66,0.1)"}
-            onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
-          >
-            <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>Set {i + 1}</span>
-            <span style={{ fontSize: 20, color: "rgba(255,255,255,0.4)" }}>{set[0].char}</span>
-          </button>
-        ))}
+        {QUIZ_SETS.map((set, i) => {
+          const done = flashDone[i];
+          const prog = flashProgress[i];
+          const inProgress = !done && prog > 0;
+          return (
+            <button key={i} onClick={() => onSelect(i)} style={{ borderRadius: 14, padding: "14px 6px", background: done ? "rgba(74,222,128,0.1)" : inProgress ? "rgba(245,200,66,0.08)" : "rgba(255,255,255,0.05)", border: `1px solid ${done ? "rgba(74,222,128,0.4)" : inProgress ? "rgba(245,200,66,0.3)" : "rgba(255,255,255,0.11)"}`, color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, transition: "all 0.18s", position: "relative" }}
+              onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+              onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+            >
+              <span style={{ fontSize: 13, fontWeight: 700, color: done ? "#4ade80" : inProgress ? GOLD : "rgba(255,255,255,0.8)" }}>Set {i + 1}</span>
+              <span style={{ fontSize: 18, color: done ? "rgba(74,222,128,0.6)" : "rgba(255,255,255,0.35)" }}>{set[0].char}</span>
+              {done && <span style={{ fontSize: 10, color: "#4ade80", fontWeight: 700 }}>✓ Done</span>}
+              {inProgress && <span style={{ fontSize: 10, color: GOLD }}>{prog + 1}/10</span>}
+            </button>
+          );
+        })}
         <button onClick={() => onSelect(RANDOM_SET_IDX)} style={{ borderRadius: 14, padding: "14px 6px", background: "linear-gradient(135deg,rgba(100,150,255,0.15),rgba(180,100,255,0.15))", border: "1px solid rgba(150,130,255,0.4)", color: "#fff", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 5, transition: "all 0.18s" }}
-          onMouseEnter={e => e.currentTarget.style.background = "linear-gradient(135deg,rgba(100,150,255,0.28),rgba(180,100,255,0.28))"}
-          onMouseLeave={e => e.currentTarget.style.background = "linear-gradient(135deg,rgba(100,150,255,0.15),rgba(180,100,255,0.15))"}
+          onMouseEnter={e => e.currentTarget.style.opacity = "0.8"}
+          onMouseLeave={e => e.currentTarget.style.opacity = "1"}
         >
           <span style={{ fontSize: 13, fontWeight: 700, color: "#c4b5fd" }}>Random</span>
           <span style={{ fontSize: 20 }}>🎲</span>
         </button>
       </div>
-      <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 11, marginTop: 24, zIndex: 1, letterSpacing: 1 }}>160 characters total</p>
+      <p style={{ color: "rgba(255,255,255,0.18)", fontSize: 11, marginTop: 24, zIndex: 1, letterSpacing: 1 }}>
+        {Object.keys(flashDone).length}/16 sets completed
+      </p>
     </div>
   );
 }
 
 // ── FLASHCARD MODE ──────────────────────────────────────────────────────────
-function FlashcardMode({ setIdx, customCards, onBack, onGoQuiz }) {
+function FlashcardMode({ setIdx, customCards, initialIndex, onProgress, onBack, onGoQuiz }) {
   const [cards] = useState(() => customCards || (setIdx === RANDOM_SET_IDX ? getRandomSet() : QUIZ_SETS[setIdx]));
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(initialIndex || 0);
   const [flipped, setFlipped] = useState(false);
   const [dir, setDir] = useState(null);
   const total = cards.length;
@@ -248,7 +257,14 @@ function FlashcardMode({ setIdx, customCards, onBack, onGoQuiz }) {
 
   const go = (d) => {
     setDir(d); setFlipped(false);
-    setTimeout(() => { setIndex(p => d === "next" ? (p + 1) % total : (p - 1 + total) % total); setDir(null); }, 200);
+    setTimeout(() => {
+      setIndex(p => {
+        const next = d === "next" ? (p + 1) % total : (p - 1 + total) % total;
+        onProgress && onProgress(setIdx, next, total);
+        return next;
+      });
+      setDir(null);
+    }, 200);
   };
 
   return (
@@ -492,22 +508,49 @@ function ResultsScreen({ setIdx, score, answers, questions, usedCards, onRetry, 
   );
 }
 
+// ── LOCAL STORAGE HELPERS ─────────────────────────────────────────────────────
+const LS_FLASH_PROGRESS = "hsk1_flash_progress";   // {setIdx: cardIndex}
+const LS_FLASH_DONE     = "hsk1_flash_done";        // {setIdx: true}
+const LS_QUIZ_SCORES    = "hsk1_quiz_scores";       // [score, ...]
+
+function lsGet(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
 // ── ROOT ─────────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen, setScreen] = useState("flashSelect");
   const [activeSet, setActiveSet] = useState(null);
   const [randomCards, setRandomCards] = useState(null);
-  const [randomMode, setRandomMode] = useState(null); // "flash" | "quiz"
+  const [randomMode, setRandomMode] = useState(null);
   const [quizResult, setQuizResult] = useState(null);
   const [quizCards, setQuizCards] = useState(null);
   const [quizQuestions, setQuizQuestions] = useState(null);
-  const [setScores, setSetScores] = useState(Array(16).fill(null));
+
+  // Persisted state — loaded from localStorage on mount
+  const [setScores, setSetScores] = useState(() => lsGet(LS_QUIZ_SCORES, Array(16).fill(null)));
+  const [flashProgress, setFlashProgress] = useState(() => lsGet(LS_FLASH_PROGRESS, {}));
+  const [flashDone, setFlashDone] = useState(() => lsGet(LS_FLASH_DONE, {}));
+
+  const markFlashProgress = (setIdx, cardIndex, total) => {
+    if (setIdx === RANDOM_SET_IDX) return;
+    const done = cardIndex === total - 1;
+    setFlashProgress(prev => { const n = { ...prev, [setIdx]: cardIndex }; lsSet(LS_FLASH_PROGRESS, n); return n; });
+    if (done) setFlashDone(prev => { const n = { ...prev, [setIdx]: true }; lsSet(LS_FLASH_DONE, n); return n; });
+  };
 
   const finishQuiz = (score, answers, questions) => {
     setQuizResult({ score, answers });
     setQuizQuestions(questions);
     if (activeSet !== RANDOM_SET_IDX) {
-      setSetScores(prev => { const n = [...prev]; n[activeSet] = score; return n; });
+      setSetScores(prev => {
+        const n = [...prev]; n[activeSet] = score;
+        lsSet(LS_QUIZ_SCORES, n);
+        return n;
+      });
     }
     setScreen("results");
   };
@@ -529,9 +572,9 @@ export default function App() {
     setScreen(randomMode === "flash" ? "flash" : "quiz");
   };
 
-  if (screen === "flashSelect") return <FlashSetSelector onSelect={handleFlashSelect} onGoQuiz={() => setScreen("quizSelect")} />;
+  if (screen === "flashSelect") return <FlashSetSelector onSelect={handleFlashSelect} onGoQuiz={() => setScreen("quizSelect")} flashProgress={flashProgress} flashDone={flashDone} />;
   if (screen === "randomPicker") return <RandomPicker mode={randomMode} onStart={handleRandomStart} onBack={() => setScreen(randomMode === "flash" ? "flashSelect" : "quizSelect")} />;
-  if (screen === "flash") return <FlashcardMode key={`flash-${activeSet}-${Date.now()}`} setIdx={activeSet} customCards={activeSet === RANDOM_SET_IDX ? randomCards : null} onBack={() => setScreen("flashSelect")} onGoQuiz={() => setScreen("quizSelect")} />;
+  if (screen === "flash") return <FlashcardMode key={`flash-${activeSet}`} setIdx={activeSet} customCards={activeSet === RANDOM_SET_IDX ? randomCards : null} initialIndex={flashProgress[activeSet] || 0} onProgress={markFlashProgress} onBack={() => setScreen("flashSelect")} onGoQuiz={() => setScreen("quizSelect")} />;
   if (screen === "quizSelect") return <QuizSetSelector scores={setScores} onSelect={handleQuizSelect} onGoFlash={() => setScreen("flashSelect")} />;
   if (screen === "quiz") return <QuizMode key={`quiz-${activeSet}-${Date.now()}`} setIdx={activeSet} customCards={quizCards} onBack={() => setScreen("quizSelect")} onFinish={finishQuiz} />;
   if (screen === "results") return <ResultsScreen setIdx={activeSet} score={quizResult.score} answers={quizResult.answers} questions={quizQuestions} usedCards={quizCards} onRetry={() => setScreen("quiz")} onBack={() => setScreen("quizSelect")} />;
