@@ -1091,6 +1091,9 @@ export default function App() {
   const [convProgress,setConvProgress]=useState(()=>lsGet(LS_CONV_PROGRESS,{}));
 
   const setScreen=(s)=>{ window.history.pushState({screen:s},"",""); setScreenState(s); };
+  // replaceScreen swaps the current history entry instead of pushing — used when
+  // we want the phone back button to skip the replaced screen (e.g. quiz → results)
+  const replaceScreen=(s)=>{ window.history.replaceState({screen:s},"",""); setScreenState(s); };
 
   useEffect(()=>{
     const onPop=()=>{ const s=window.history.state?.screen; setScreenState(s||"flashSelect"); };
@@ -1107,7 +1110,7 @@ export default function App() {
     const spec=activeQuizSpec;
     if(spec.type==="char"&&spec.idx!==RANDOM_SET_IDX){ setScores(prev=>{ const n={...prev,char:{...prev.char,[spec.idx]:score}}; lsSet(LS_QUIZ_SCORES,n.char); return n; }); }
     else if(spec.type==="conv"){ setScores(prev=>{ const n={...prev,conv:{...prev.conv,[spec.id]:score}}; lsSet("hsk1_conv_scores",n.conv); return n; }); }
-    setScreen("results");
+    replaceScreen("results");
   };
 
   const goHome=()=>setScreen("flashSelect");
