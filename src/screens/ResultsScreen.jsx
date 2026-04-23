@@ -26,13 +26,13 @@ export function ResultsScreen({ quizSpec, score, answers, questions, onRetry, on
       </div>
       <div style={{ width:"100%", maxWidth:MAX, display:"flex", flexDirection:"column", gap:7, zIndex:1, marginBottom:18 }}>
         {answers.map((ok,i)=>{ const q=questions[i]; return (
-          <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:9, background:ok?"rgba(74,222,128,0.07)":"rgba(248,113,113,0.07)", border:`1px solid ${ok?"rgba(74,222,128,0.22)":"rgba(248,113,113,0.22)"}`, borderRadius:12, padding:"10px 11px" }}>
-            <span style={{ fontSize:isConv?16:22, lineHeight:1.4, color:"#fff", flexShrink:0 }}>{q.prompt}</span>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)", marginBottom:2, letterSpacing:1 }}>{isConv?"MEANING":q.type?.toUpperCase()}</div>
-              <div style={{ fontSize:14, color:"#fff", lineHeight:1.4 }}>{q.answer}</div>
+          <div key={i} style={{ display:"flex", flexDirection:"column", gap:4, background:ok?"rgba(74,222,128,0.07)":"rgba(248,113,113,0.07)", border:`1px solid ${ok?"rgba(74,222,128,0.22)":"rgba(248,113,113,0.22)"}`, borderRadius:12, padding:"10px 11px" }}>
+            <div style={{ display:"flex", alignItems:"flex-start", gap:9 }}>
+              <span style={{ fontSize:isConv?16:22, lineHeight:1.4, color:"#fff", flex:1, minWidth:0 }}>{q.prompt}</span>
+              <span style={{ fontSize:17, color:ok?"#4ade80":"#f87171", flexShrink:0 }}>{ok?"✓":"✗"}</span>
             </div>
-            <span style={{ fontSize:17, color:ok?"#4ade80":"#f87171", flexShrink:0 }}>{ok?"✓":"✗"}</span>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)", letterSpacing:1 }}>{isConv?"MEANING":q.type?.toUpperCase()}</div>
+            <div style={{ fontSize:14, color:"#fff", lineHeight:1.4 }}>{q.answer}</div>
           </div>
         ); })}
       </div>
