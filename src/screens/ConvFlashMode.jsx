@@ -46,12 +46,12 @@ export function ConvFlashMode({ topicId, initialIndex, onProgress, onBack, onGoF
       </div>
       {flipped && s.words && (
         <div style={{ width:"100%", maxWidth:MAX, marginTop:18, zIndex:1 }}>
-          <div style={{ display:"flex", flexWrap:"wrap", gap:6, justifyContent:"center" }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
             {s.words.map((w,i) => (
-              <div key={i} style={{ background:"rgba(45,212,191,0.12)", border:"1px solid rgba(45,212,191,0.25)", borderRadius:10, padding:"5px 10px", textAlign:"center", minWidth:60 }}>
-                <div style={{ fontSize:17, color:"#fff", fontWeight:600 }}>{w.w}</div>
-                <div style={{ fontSize:12, color:TEAL, fontStyle:"italic" }}>{w.p}</div>
-                <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>{w.m}</div>
+              <div key={i} style={{ display:"flex", alignItems:"center", gap:12, background:"rgba(45,212,191,0.12)", border:"1px solid rgba(45,212,191,0.25)", borderRadius:10, padding:"8px 14px" }}>
+                <div style={{ fontSize:18, color:"#fff", fontWeight:600, minWidth:64, flexShrink:0 }}>{w.w}</div>
+                <div style={{ fontSize:13, color:TEAL, fontStyle:"italic", minWidth:80, flexShrink:0 }}>{w.p}</div>
+                <div style={{ fontSize:13, color:"rgba(255,255,255,0.6)", flex:1, textAlign:"right" }}>{w.m}</div>
               </div>
             ))}
           </div>
