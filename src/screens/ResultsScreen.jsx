@@ -31,7 +31,7 @@ export function ResultsScreen({ quizSpec, score, answers, questions, onRetry, on
               <span style={{ fontSize:isConv?16:22, lineHeight:1.4, color:"#fff", flex:1, minWidth:0 }}>{q.prompt}</span>
               <span style={{ fontSize:17, color:ok?"#4ade80":"#f87171", flexShrink:0 }}>{ok?"✓":"✗"}</span>
             </div>
-            <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)", letterSpacing:1 }}>{isConv?"MEANING":q.type?.toUpperCase()}</div>
+            <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)", letterSpacing:1 }}>{isConv?"":q.type?.toUpperCase()}</div>
             <div style={{ fontSize:14, color:"#fff", lineHeight:1.4 }}>{q.answer}</div>
           </div>
         ); })}
