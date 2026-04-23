@@ -12,7 +12,7 @@ export const BG = {
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  fontFamily: "'Noto Serif',Georgia,serif",
+  fontFamily: "'Noto Serif','Noto Sans SC',Georgia,serif",
   padding: "16px 16px 60px",
   position: "relative",
   overflowX: "hidden",
