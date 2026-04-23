@@ -19,26 +19,26 @@ export function ResultsScreen({ quizSpec, score, answers, questions, onRetry, on
         <BackBtn onClick={onHome} label="Home"/>
       </div>
       <div style={{ textAlign:"center", marginBottom:16, zIndex:1 }}>
-        <div style={{ fontSize:44 }}>{emoji}</div>
-        <h2 style={{ color:"#fff", fontSize:22, fontWeight:700, margin:"8px 0 4px" }}>{msg}</h2>
-        <p style={{ color:"rgba(255,255,255,0.38)", fontSize:13 }}>{label}</p>
-        <div style={{ fontSize:46, fontWeight:800, color:sc, textShadow:`0 0 30px ${sc}55`, marginTop:6 }}>{score}<span style={{ fontSize:20, color:"rgba(255,255,255,0.28)" }}>/{total}</span></div>
+        <div style={{ fontSize:46 }}>{emoji}</div>
+        <h2 style={{ color:"#fff", fontSize:24, fontWeight:700, margin:"8px 0 4px" }}>{msg}</h2>
+        <p style={{ color:"rgba(255,255,255,0.38)", fontSize:15 }}>{label}</p>
+        <div style={{ fontSize:48, fontWeight:800, color:sc, textShadow:`0 0 30px ${sc}55`, marginTop:6 }}>{score}<span style={{ fontSize:22, color:"rgba(255,255,255,0.28)" }}>/{total}</span></div>
       </div>
       <div style={{ width:"100%", maxWidth:MAX, display:"flex", flexDirection:"column", gap:7, zIndex:1, marginBottom:18 }}>
         {answers.map((ok,i)=>{ const q=questions[i]; return (
           <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:9, background:ok?"rgba(74,222,128,0.07)":"rgba(248,113,113,0.07)", border:`1px solid ${ok?"rgba(74,222,128,0.22)":"rgba(248,113,113,0.22)"}`, borderRadius:12, padding:"10px 11px" }}>
-            <span style={{ fontSize:isConv?14:20, lineHeight:1.4, color:"#fff", flexShrink:0 }}>{q.prompt}</span>
+            <span style={{ fontSize:isConv?16:22, lineHeight:1.4, color:"#fff", flexShrink:0 }}>{q.prompt}</span>
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", marginBottom:2, letterSpacing:1 }}>{isConv?"MEANING":q.type?.toUpperCase()}</div>
-              <div style={{ fontSize:12, color:"#fff", lineHeight:1.4 }}>{q.answer}</div>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,0.35)", marginBottom:2, letterSpacing:1 }}>{isConv?"MEANING":q.type?.toUpperCase()}</div>
+              <div style={{ fontSize:14, color:"#fff", lineHeight:1.4 }}>{q.answer}</div>
             </div>
-            <span style={{ fontSize:15, color:ok?"#4ade80":"#f87171", flexShrink:0 }}>{ok?"✓":"✗"}</span>
+            <span style={{ fontSize:17, color:ok?"#4ade80":"#f87171", flexShrink:0 }}>{ok?"✓":"✗"}</span>
           </div>
         ); })}
       </div>
       <div style={{ display:"flex", gap:10, zIndex:1, width:"100%", maxWidth:MAX }}>
-        <button onClick={onHome} style={{ flex:1, padding:"13px 0", borderRadius:99, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>🏠 Home</button>
-        <button onClick={onRetry} style={{ flex:1, padding:"13px 0", borderRadius:99, background:`linear-gradient(135deg,${accent},${isConv?"#60a5fa":ORANGE})`, border:"none", color:isConv?"#0a1a1a":"#fff", fontSize:13, fontWeight:700, cursor:"pointer" }}>RETRY ↺</button>
+        <button onClick={onHome} style={{ flex:1, padding:"13px 0", borderRadius:99, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:15, fontWeight:700, cursor:"pointer" }}>🏠 Home</button>
+        <button onClick={onRetry} style={{ flex:1, padding:"13px 0", borderRadius:99, background:`linear-gradient(135deg,${accent},${isConv?"#60a5fa":ORANGE})`, border:"none", color:isConv?"#0a1a1a":"#fff", fontSize:15, fontWeight:700, cursor:"pointer" }}>RETRY ↺</button>
       </div>
     </div>
   );

@@ -31,9 +31,9 @@ export function QuizMode({ quizSpec, customCards, onBack, onFinish }) {
         <BackBtn onClick={onBack} label="Sets"/>
         <div style={{ flex:1 }}><ProgressRow label={headerLabel} current={qIdx+1} total={questions.length} accent={accent}/></div>
       </div>
-      <p style={{ color:"rgba(255,255,255,0.42)", fontSize:11, letterSpacing:1, marginBottom:8, zIndex:1 }}>{q.label}</p>
+      <p style={{ color:"rgba(255,255,255,0.42)", fontSize:13, letterSpacing:1, marginBottom:8, zIndex:1 }}>{q.label}</p>
       <div style={{ width:"100%", maxWidth:MAX, background:"linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))", border:`1px solid ${accent}44`, borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:isConv?85:125, marginBottom:14, zIndex:1, padding:"16px 18px", boxShadow:"0 8px 40px rgba(0,0,0,0.35)" }}>
-        {isConv?<><span style={{ fontSize:19, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.6 }}>{q.prompt}</span><span style={{ fontSize:12, color:accent, fontStyle:"italic", marginTop:5, textAlign:"center" }}>{q.sub}</span></>:<span style={{ fontSize:68, color:"#fff", textShadow:`0 4px 24px ${accent}44`, lineHeight:1 }}>{q.prompt}</span>}
+        {isConv?<><span style={{ fontSize:21, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.6 }}>{q.prompt}</span><span style={{ fontSize:14, color:accent, fontStyle:"italic", marginTop:5, textAlign:"center" }}>{q.sub}</span></>:<span style={{ fontSize:70, color:"#fff", textShadow:`0 4px 24px ${accent}44`, lineHeight:1 }}>{q.prompt}</span>}
       </div>
       <div style={{ display:"flex", flexDirection:"column", gap:7, width:"100%", maxWidth:MAX, zIndex:1 }}>
         {q.options.map((opt,i)=>{ const val=opt.value??opt; const isCorrect=val===q.answer, isChosen=val===selected;
@@ -41,18 +41,18 @@ export function QuizMode({ quizSpec, customCards, onBack, onFinish }) {
           if(revealed){ if(isCorrect){bg="rgba(74,222,128,0.12)";border="1px solid rgba(74,222,128,0.5)";lbg="rgba(74,222,128,0.28)";tc="#4ade80";tc2="rgba(74,222,128,0.7)";} else if(isChosen){bg="rgba(248,113,113,0.12)";border="1px solid rgba(248,113,113,0.5)";lbg="rgba(248,113,113,0.28)";tc="#f87171";tc2="rgba(248,113,113,0.7)";} }
           return (
             <button key={i} onClick={()=>pick(val)} style={{ display:"flex", alignItems:"center", gap:9, background:bg, border, borderRadius:14, padding:"11px 12px", cursor:revealed?"default":"pointer", transition:"all 0.2s", textAlign:"left", width:"100%" }}>
-              <span style={{ width:26, height:26, borderRadius:7, background:lbg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:revealed&&isCorrect?"#4ade80":revealed&&isChosen&&!isCorrect?"#f87171":accent, flexShrink:0 }}>{OPTION_LABELS[i]}</span>
+              <span style={{ width:26, height:26, borderRadius:7, background:lbg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:revealed&&isCorrect?"#4ade80":revealed&&isChosen&&!isCorrect?"#f87171":accent, flexShrink:0 }}>{OPTION_LABELS[i]}</span>
               <div style={{ flex:1, minWidth:0 }}>
-                {isConv?<div style={{ fontSize:13, color:tc, lineHeight:1.4 }}>{opt.display??opt.value}</div>
-                  :<><div style={{ fontSize:13, color:tc, fontStyle:q.type==="pinyin"?"italic":"normal" }}>{opt.pinyin}</div><div style={{ fontSize:11, color:tc2, marginTop:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{opt.meaning}</div></>}
+                {isConv?<div style={{ fontSize:15, color:tc, lineHeight:1.4 }}>{opt.display??opt.value}</div>
+                  :<><div style={{ fontSize:15, color:tc, fontStyle:q.type==="pinyin"?"italic":"normal" }}>{opt.pinyin}</div><div style={{ fontSize:13, color:tc2, marginTop:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{opt.meaning}</div></>}
               </div>
-              {revealed&&isCorrect&&<span style={{ fontSize:14, color:"#4ade80", flexShrink:0 }}>✓</span>}
-              {revealed&&isChosen&&!isCorrect&&<span style={{ fontSize:14, color:"#f87171", flexShrink:0 }}>✗</span>}
+              {revealed&&isCorrect&&<span style={{ fontSize:16, color:"#4ade80", flexShrink:0 }}>✓</span>}
+              {revealed&&isChosen&&!isCorrect&&<span style={{ fontSize:16, color:"#f87171", flexShrink:0 }}>✗</span>}
             </button>
           );
         })}
       </div>
-      {revealed&&<button onClick={next} style={{ marginTop:16, padding:"13px 0", width:"100%", maxWidth:MAX, borderRadius:99, background:`linear-gradient(135deg,${accent},${isConv?"#60a5fa":ORANGE})`, border:"none", color:isConv?"#0a1a1a":"#1a1500", fontSize:14, fontWeight:700, cursor:"pointer", zIndex:1 }}>{isLast?"SEE RESULTS":"NEXT →"}</button>}
+      {revealed&&<button onClick={next} style={{ marginTop:16, padding:"13px 0", width:"100%", maxWidth:MAX, borderRadius:99, background:`linear-gradient(135deg,${accent},${isConv?"#60a5fa":ORANGE})`, border:"none", color:isConv?"#0a1a1a":"#1a1500", fontSize:16, fontWeight:700, cursor:"pointer", zIndex:1 }}>{isLast?"SEE RESULTS":"NEXT →"}</button>}
     </div>
   );
 }

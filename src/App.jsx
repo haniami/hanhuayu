@@ -16,6 +16,7 @@ import { QuizSetSelector } from "./screens/QuizSetSelector";
 import { QuizMode } from "./screens/QuizMode";
 import { RandomPicker } from "./screens/RandomPicker";
 import { ResultsScreen } from "./screens/ResultsScreen";
+import { Footer } from "./components/Footer";
 
 export default function App() {
   const [screen,setScreenState]=useState("flashSelect");
@@ -64,12 +65,12 @@ export default function App() {
   const handleQuizSelect=(spec)=>{ if(spec.type==="char"&&spec.idx===RANDOM_SET_IDX){setRandomMode("quiz");setScreen("randomPicker");} else{setActiveQuizSpec(spec);setQuizCards(null);setScreen("quiz");} };
   const handleRandomStart=(cards)=>{ if(randomMode==="flash"){setActiveSet(RANDOM_SET_IDX);setRandomCards(cards);setScreen("flash");} else{setActiveQuizSpec({type:"char",idx:RANDOM_SET_IDX});setQuizCards(cards);setScreen("quiz");} };
 
-  if(screen==="flashSelect") return <FlashSetSelector onSelect={handleFlashSelect} onGoConv={goConv} onGoQuiz={goQuiz} flashProgress={flashProgress} flashDone={flashDone}/>;
-  if(screen==="flash") return <FlashcardMode key={`flash-${activeSet}`} setIdx={activeSet} customCards={activeSet===RANDOM_SET_IDX?randomCards:null} initialIndex={flashProgress[activeSet]||0} onProgress={markFlashProgress} onBack={goFlash} onGoConv={goConv} onGoQuiz={goQuiz}/>;
-  if(screen==="convSelect") return <ConvSelector onSelect={id=>{setActiveConvTopic(id);setScreen("convFlash");}} onGoFlash={goFlash} onGoQuiz={goQuiz} convProgress={convProgress}/>;
-  if(screen==="convFlash") return <ConvFlashMode key={`conv-${activeConvTopic}`} topicId={activeConvTopic} initialIndex={convProgress[activeConvTopic]||0} onProgress={markConvProgress} onBack={goConv} onGoFlash={goFlash} onGoQuiz={goQuiz}/>;
-  if(screen==="randomPicker") return <RandomPicker mode={randomMode} onStart={handleRandomStart} onBack={()=>setScreen(randomMode==="flash"?"flashSelect":"quizSelect")}/>;
-  if(screen==="quizSelect") return <QuizSetSelector scores={scores} onSelect={handleQuizSelect} onGoFlash={goFlash} onGoConv={goConv}/>;
-  if(screen==="quiz") return <QuizMode key={`quiz-${JSON.stringify(activeQuizSpec)}-${Date.now()}`} quizSpec={activeQuizSpec} customCards={quizCards} onBack={goQuiz} onFinish={finishQuiz}/>;
-  if(screen==="results") return <ResultsScreen quizSpec={activeQuizSpec} score={quizResult.score} answers={quizResult.answers} questions={quizQuestions} onRetry={()=>setScreen("quiz")} onHome={goHome}/>;
+  if(screen==="flashSelect") return <><FlashSetSelector onSelect={handleFlashSelect} onGoConv={goConv} onGoQuiz={goQuiz} flashProgress={flashProgress} flashDone={flashDone}/><Footer/></>;
+  if(screen==="flash") return <><FlashcardMode key={`flash-${activeSet}`} setIdx={activeSet} customCards={activeSet===RANDOM_SET_IDX?randomCards:null} initialIndex={flashProgress[activeSet]||0} onProgress={markFlashProgress} onBack={goFlash} onGoConv={goConv} onGoQuiz={goQuiz}/><Footer/></>;
+  if(screen==="convSelect") return <><ConvSelector onSelect={id=>{setActiveConvTopic(id);setScreen("convFlash");}} onGoFlash={goFlash} onGoQuiz={goQuiz} convProgress={convProgress}/><Footer/></>;
+  if(screen==="convFlash") return <><ConvFlashMode key={`conv-${activeConvTopic}`} topicId={activeConvTopic} initialIndex={convProgress[activeConvTopic]||0} onProgress={markConvProgress} onBack={goConv} onGoFlash={goFlash} onGoQuiz={goQuiz}/><Footer/></>;
+  if(screen==="randomPicker") return <><RandomPicker mode={randomMode} onStart={handleRandomStart} onBack={()=>setScreen(randomMode==="flash"?"flashSelect":"quizSelect")}/><Footer/></>;
+  if(screen==="quizSelect") return <><QuizSetSelector scores={scores} onSelect={handleQuizSelect} onGoFlash={goFlash} onGoConv={goConv}/><Footer/></>;
+  if(screen==="quiz") return <><QuizMode key={`quiz-${JSON.stringify(activeQuizSpec)}-${Date.now()}`} quizSpec={activeQuizSpec} customCards={quizCards} onBack={goQuiz} onFinish={finishQuiz}/><Footer/></>;
+  if(screen==="results") return <><ResultsScreen quizSpec={activeQuizSpec} score={quizResult.score} answers={quizResult.answers} questions={quizQuestions} onRetry={()=>setScreen("quiz")} onHome={goHome}/><Footer/></>;
 }

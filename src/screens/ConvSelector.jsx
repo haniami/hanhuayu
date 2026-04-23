@@ -20,8 +20,8 @@ export function ConvSelector({ onSelect, onGoFlash, onGoQuiz, convProgress }) {
     <div style={BG}>
       <div style={BLOB1}/><div style={BLOB2}/>
       <div style={{ textAlign:"center", marginBottom:12, zIndex:1 }}>
-        <h1 style={{ color:TEAL, fontSize:22, fontWeight:700, letterSpacing:2, margin:0 }}>Conversations · 会话</h1>
-        <p style={{ color:"rgba(255,255,255,0.38)", fontSize:12, marginTop:4 }}>{CONV_TOPICS.length} topics</p>
+        <h1 style={{ color:TEAL, fontSize:24, fontWeight:700, letterSpacing:2, margin:0 }}>Conversations · 会话</h1>
+        <p style={{ color:"rgba(255,255,255,0.38)", fontSize:14, marginTop:4 }}>{CONV_TOPICS.length} topics</p>
       </div>
       <TabBar current="conv" onFlash={onGoFlash} onConv={()=>{}} onQuiz={onGoQuiz}/>
       <div style={{ width:"100%", maxWidth:MAX, zIndex:1, display:"flex", flexDirection:"column", gap:14 }}>
@@ -29,16 +29,16 @@ export function ConvSelector({ onSelect, onGoFlash, onGoQuiz, convProgress }) {
           const topics = cat.topics.map(id=>topicMap[id]).filter(Boolean);
           return (
             <div key={cat.group}>
-              <p style={{ color:cat.color, fontSize:10, fontWeight:700, letterSpacing:2, marginBottom:7, textTransform:"uppercase" }}>{cat.group}</p>
+              <p style={{ color:cat.color, fontSize:12, fontWeight:700, letterSpacing:2, marginBottom:7, textTransform:"uppercase" }}>{cat.group}</p>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:7 }}>
                 {topics.map(topic => {
                   const prog=convProgress[topic.id]||0; const done=prog>=topic.sentences.length;
                   return (
                     <button key={topic.id} onClick={()=>onSelect(topic.id)} style={{ borderRadius:13, padding:"11px 10px", background:done?"rgba(45,212,191,0.1)":"rgba(255,255,255,0.05)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:8, textAlign:"left" }}>
-                      <span style={{ fontSize:20, flexShrink:0 }}>{topic.emoji}</span>
+                      <span style={{ fontSize:22, flexShrink:0 }}>{topic.emoji}</span>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontSize:11, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.85)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{topic.category}</div>
-                        <div style={{ fontSize:10, color:"rgba(255,255,255,0.35)", marginTop:2 }}>{topic.sentences.length} sentences{done?" · ✓":prog>0?` · ${prog}/${topic.sentences.length}`:""}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.85)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{topic.category}</div>
+                        <div style={{ fontSize:12, color:"rgba(255,255,255,0.35)", marginTop:2 }}>{topic.sentences.length} sentences{done?" · ✓":prog>0?` · ${prog}/${topic.sentences.length}`:""}</div>
                       </div>
                     </button>
                   );
