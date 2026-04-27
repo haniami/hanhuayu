@@ -4,6 +4,26 @@ import { CONV_TOPICS } from "../data/convTopics";
 import { BackBtn } from "../components/BackBtn";
 import { ProgressRow } from "../components/ProgressRow";
 
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-CN";
+  u.rate = 0.85;
+  window.speechSynthesis.speak(u);
+}
+
+function SpeakBtn({ text, size = 15 }) {
+  return (
+    <button
+      onClick={e => { e.stopPropagation(); speak(text); }}
+      style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 4px", fontSize:size, lineHeight:1, color:TEAL, opacity:0.8, flexShrink:0 }}
+    >
+      🔊
+    </button>
+  );
+}
+
 export function ConvFlashMode({ topicId, initialIndex, onProgress, onBack, onGoFlash, onGoQuiz }) {
   const topic = CONV_TOPICS.find(t=>t.id===topicId);
   const sentences = topic.sentences;
@@ -28,12 +48,18 @@ export function ConvFlashMode({ topicId, initialIndex, onProgress, onBack, onGoF
           </div>
           {/* Front */}
           <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:"linear-gradient(145deg,rgba(45,212,191,0.1),rgba(45,212,191,0.03))", border:"1px solid rgba(45,212,191,0.25)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10, padding:22, boxShadow:"0 8px 40px rgba(0,0,0,0.4)" }}>
-            <span style={{ fontSize:24, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.6 }}>{s.zh}</span>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:24, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.6 }}>{s.zh}</span>
+              <SpeakBtn text={s.zh} size={18}/>
+            </div>
             <span style={{ fontSize:15, color:TEAL, letterSpacing:1, fontStyle:"italic", textAlign:"center" }}>{s.pinyin}</span>
           </div>
           {/* Back */}
-          <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", transform:"rotateY(180deg)", background:"linear-gradient(145deg,rgba(45,212,191,0.15),rgba(45,212,191,0.05))", border:"1px solid rgba(45,212,191,0.5)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"flex-start", padding:"18px 20px", overflow:"auto" }}>
-            <span style={{ fontSize:16, color:"rgba(255,255,255,0.22)", textAlign:"center", marginBottom:6 }}>{s.zh}</span>
+          <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", transform:"rotateY(180deg)", background:"linear-gradient(145deg,rgba(45,212,191,0.15),rgba(45,212,191,0.05))", border:"1px solid rgba(45,212,191,0.5)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"18px 20px", overflow:"auto" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6 }}>
+              <span style={{ fontSize:16, color:"rgba(255,255,255,0.22)", textAlign:"center" }}>{s.zh}</span>
+              <SpeakBtn text={s.zh} size={13}/>
+            </div>
             <span style={{ fontSize:19, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.5, marginBottom:6 }}>{s.meaning}</span>
             <span style={{ fontSize:13, color:TEAL, fontStyle:"italic", textAlign:"center" }}>{s.pinyin}</span>
           </div>
@@ -52,6 +78,7 @@ export function ConvFlashMode({ topicId, initialIndex, onProgress, onBack, onGoF
                 <div style={{ fontSize:18, color:"#fff", fontWeight:600, minWidth:64, flexShrink:0 }}>{w.w}</div>
                 <div style={{ fontSize:13, color:TEAL, fontStyle:"italic", minWidth:80, flexShrink:0 }}>{w.p}</div>
                 <div style={{ fontSize:13, color:"rgba(255,255,255,0.6)", flex:1, textAlign:"right" }}>{w.m}</div>
+                <SpeakBtn text={w.w} size={13}/>
               </div>
             ))}
           </div>
