@@ -44,7 +44,7 @@ export function QuizMode({ quizSpec, customCards, onBack, onFinish }) {
               <span style={{ width:26, height:26, borderRadius:7, background:lbg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:revealed&&isCorrect?"#4ade80":revealed&&isChosen&&!isCorrect?"#f87171":accent, flexShrink:0 }}>{OPTION_LABELS[i]}</span>
               <div style={{ flex:1, minWidth:0 }}>
                 {isConv?<div style={{ fontSize:15, color:tc, lineHeight:1.4 }}>{opt.display??opt.value}</div>
-                  :<><div style={{ fontSize:15, color:tc, fontStyle:q.type==="pinyin"?"italic":"normal" }}>{opt.pinyin}</div><div style={{ fontSize:13, color:tc2, marginTop:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{opt.meaning}</div></>}
+                  :<><div style={{ fontSize:15, color:tc, fontStyle:q.type==="pinyin"?"italic":"normal" }}>{opt.pinyin}</div><div style={{ fontSize:13, color:tc2, marginTop:2, lineHeight:1.3 }}>{opt.meaning}</div></>}
               </div>
               {revealed&&isCorrect&&<span style={{ fontSize:16, color:"#4ade80", flexShrink:0 }}>✓</span>}
               {revealed&&isChosen&&!isCorrect&&<span style={{ fontSize:16, color:"#f87171", flexShrink:0 }}>✗</span>}

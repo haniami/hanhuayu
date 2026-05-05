@@ -32,10 +32,10 @@ export function QuizSetSelector({ onSelect, onGoFlash, onGoConv, scores }) {
         <p style={{ color:TEAL, fontSize:12, fontWeight:700, letterSpacing:2, marginBottom:8 }}>CONVERSATIONS</p>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:7 }}>
           {CONV_TOPICS.map(topic=>{ const sc=convScores[topic.id]; const done=sc!=null; const total=topic.sentences.length; const col=done?(sc===total?"#4ade80":sc>=total*0.7?GOLD:"#f87171"):null; return (
-            <button key={topic.id} onClick={()=>onSelect({type:"conv",id:topic.id})} style={{ borderRadius:12, padding:"10px 10px", background:done?"rgba(45,212,191,0.08)":"rgba(255,255,255,0.04)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:7, textAlign:"left" }}>
-              <span style={{ fontSize:19, flexShrink:0 }}>{topic.emoji}</span>
+            <button key={topic.id} onClick={()=>onSelect({type:"conv",id:topic.id})} style={{ borderRadius:12, padding:"10px 10px", background:done?"rgba(45,212,191,0.08)":"rgba(255,255,255,0.04)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"flex-start", gap:7, textAlign:"left", width:"100%" }}>
+              <span style={{ fontSize:19, flexShrink:0, marginTop:1 }}>{topic.emoji}</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:12, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.8)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{topic.category}</div>
+                <div style={{ fontSize:12, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.8)", lineHeight:1.3 }}>{topic.category}</div>
                 {done?<div style={{ fontSize:11, color:col, fontWeight:700 }}>{sc}/{total} ✓</div>:<div style={{ fontSize:11, color:"rgba(255,255,255,0.35)" }}>{total} qs</div>}
               </div>
             </button>
