@@ -34,10 +34,10 @@ export function ConvSelector({ onSelect, onGoFlash, onGoQuiz, convProgress }) {
                 {topics.map(topic => {
                   const prog=convProgress[topic.id]||0; const done=prog>=topic.sentences.length;
                   return (
-                    <button key={topic.id} onClick={()=>onSelect(topic.id)} style={{ borderRadius:13, padding:"11px 10px", background:done?"rgba(45,212,191,0.1)":"rgba(255,255,255,0.05)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", gap:8, textAlign:"left" }}>
+                    <button key={topic.id} onClick={()=>onSelect(topic.id)} style={{ borderRadius:13, padding:"11px 10px", background:done?"rgba(45,212,191,0.1)":"rgba(255,255,255,0.05)", border:`1px solid ${done?"rgba(45,212,191,0.35)":"rgba(255,255,255,0.1)"}`, color:"#fff", cursor:"pointer", display:"flex", alignItems:"flex-start", gap:8, textAlign:"left", width:"100%" }}>
                       <span style={{ fontSize:22, flexShrink:0 }}>{topic.emoji}</span>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontSize:13, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.85)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{topic.category}</div>
+                        <div style={{ fontSize:13, fontWeight:700, color:done?TEAL:"rgba(255,255,255,0.85)", lineHeight:1.3 }}>{topic.category}</div>
                         <div style={{ fontSize:12, color:"rgba(255,255,255,0.35)", marginTop:2 }}>{topic.sentences.length} sentences{done?" · ✓":prog>0?` · ${prog}/${topic.sentences.length}`:""}</div>
                       </div>
                     </button>

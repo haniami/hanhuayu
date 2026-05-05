@@ -72,5 +72,5 @@ export default function App() {
   if(screen==="randomPicker") return <><RandomPicker mode={randomMode} onStart={handleRandomStart} onBack={()=>setScreen(randomMode==="flash"?"flashSelect":"quizSelect")}/><Footer/></>;
   if(screen==="quizSelect") return <><QuizSetSelector scores={scores} onSelect={handleQuizSelect} onGoFlash={goFlash} onGoConv={goConv}/><Footer/></>;
   if(screen==="quiz") return <><QuizMode key={`quiz-${JSON.stringify(activeQuizSpec)}-${Date.now()}`} quizSpec={activeQuizSpec} customCards={quizCards} onBack={goQuiz} onFinish={finishQuiz}/><Footer/></>;
-  if(screen==="results") return <><ResultsScreen quizSpec={activeQuizSpec} score={quizResult.score} answers={quizResult.answers} questions={quizQuestions} onRetry={()=>setScreen("quiz")} onHome={goHome}/><Footer/></>;
+  if(screen==="results") return <><ResultsScreen quizSpec={activeQuizSpec} score={quizResult.score} answers={quizResult.answers} questions={quizQuestions} onRetry={()=>setScreen("quiz")} onHome={goQuiz}/><Footer/></>;
 }

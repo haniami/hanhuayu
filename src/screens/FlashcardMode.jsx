@@ -7,6 +7,26 @@ import { BackBtn } from "../components/BackBtn";
 import { TabBar } from "../components/TabBar";
 import { ProgressRow } from "../components/ProgressRow";
 
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "zh-CN";
+  u.rate = 0.85;
+  window.speechSynthesis.speak(u);
+}
+
+function SpeakBtn({ text, size = 15, color = GOLD }) {
+  return (
+    <button
+      onClick={e => { e.stopPropagation(); speak(text); }}
+      style={{ background:"none", border:"none", cursor:"pointer", padding:"2px 4px", fontSize:size, lineHeight:1, color, opacity:0.8, flexShrink:0 }}
+    >
+      🔊
+    </button>
+  );
+}
+
 export function FlashcardMode({ setIdx, customCards, initialIndex, onProgress, onBack, onGoConv, onGoQuiz }) {
   const [cards] = useState(()=>customCards||(setIdx===RANDOM_SET_IDX?getRandomSet():QUIZ_SETS[setIdx]));
   const [index, setIndex] = useState(initialIndex||0);
@@ -27,11 +47,17 @@ export function FlashcardMode({ setIdx, customCards, initialIndex, onProgress, o
       <div onClick={()=>setFlipped(f=>!f)} style={{ width:"100%", maxWidth:MAX, height:200, perspective:"1000px", cursor:"pointer", marginBottom:22, zIndex:1, opacity:dir?0:1, transform:dir==="next"?"translateX(-22px)":dir==="prev"?"translateX(22px)":"none", transition:"opacity 0.2s,transform 0.2s" }}>
         <div style={{ position:"relative", width:"100%", height:"100%", transformStyle:"preserve-3d", transition:"transform 0.55s cubic-bezier(.4,.2,.2,1)", transform:flipped?"rotateY(180deg)":"rotateY(0)" }}>
           <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", background:"linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))", border:"1px solid rgba(245,200,66,0.25)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, boxShadow:"0 8px 40px rgba(0,0,0,0.4)" }}>
-            <span style={{ fontSize:74, lineHeight:1, color:"#fff", textShadow:"0 4px 24px rgba(245,200,66,0.3)" }}>{card.char}</span>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:74, lineHeight:1, color:"#fff", textShadow:"0 4px 24px rgba(245,200,66,0.3)" }}>{card.char}</span>
+              <SpeakBtn text={card.char} size={22}/>
+            </div>
             <span style={{ fontSize:17, color:GOLD, letterSpacing:3, fontStyle:"italic" }}>{card.pinyin}</span>
           </div>
           <div style={{ position:"absolute", inset:0, backfaceVisibility:"hidden", WebkitBackfaceVisibility:"hidden", transform:"rotateY(180deg)", background:"linear-gradient(145deg,rgba(245,200,66,0.12),rgba(245,200,66,0.03))", border:"1px solid rgba(245,200,66,0.5)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10, padding:20 }}>
-            <span style={{ fontSize:30, color:"rgba(255,255,255,0.18)" }}>{card.char}</span>
+            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <span style={{ fontSize:30, color:"rgba(255,255,255,0.18)" }}>{card.char}</span>
+              <SpeakBtn text={card.char} size={15}/>
+            </div>
             <span style={{ fontSize:22, color:"#fff", fontWeight:600, textAlign:"center", lineHeight:1.4 }}>{card.meaning}</span>
             <span style={{ fontSize:15, color:GOLD, letterSpacing:3, fontStyle:"italic" }}>{card.pinyin}</span>
           </div>

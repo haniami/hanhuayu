@@ -16,7 +16,7 @@ export function ResultsScreen({ quizSpec, score, answers, questions, onRetry, on
     <div style={BG}>
       <div style={BLOB1}/><div style={BLOB2}/>
       <div style={{ width:"100%", maxWidth:MAX, zIndex:1, marginBottom:14 }}>
-        <BackBtn onClick={onHome} label="Home"/>
+        <BackBtn onClick={onHome} label="Sets"/>
       </div>
       <div style={{ textAlign:"center", marginBottom:16, zIndex:1 }}>
         <div style={{ fontSize:46 }}>{emoji}</div>
@@ -37,7 +37,7 @@ export function ResultsScreen({ quizSpec, score, answers, questions, onRetry, on
         ); })}
       </div>
       <div style={{ display:"flex", gap:10, zIndex:1, width:"100%", maxWidth:MAX }}>
-        <button onClick={onHome} style={{ flex:1, padding:"13px 0", borderRadius:99, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:15, fontWeight:700, cursor:"pointer" }}>🏠 Home</button>
+        <button onClick={onHome} style={{ flex:1, padding:"13px 0", borderRadius:99, background:"rgba(255,255,255,0.08)", border:"1px solid rgba(255,255,255,0.15)", color:"#fff", fontSize:15, fontWeight:700, cursor:"pointer" }}>← Sets</button>
         <button onClick={onRetry} style={{ flex:1, padding:"13px 0", borderRadius:99, background:`linear-gradient(135deg,${accent},${isConv?"#60a5fa":ORANGE})`, border:"none", color:isConv?"#0a1a1a":"#fff", fontSize:15, fontWeight:700, cursor:"pointer" }}>RETRY ↺</button>
       </div>
     </div>
